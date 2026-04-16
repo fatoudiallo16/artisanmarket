@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('vendeurs', function (Blueprint $table) {
             $table->id();
-            $table->string('prenom');
-            $table->string('nom');
+            
+            $table->string('name');
             $table->string('nom_boutique');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
