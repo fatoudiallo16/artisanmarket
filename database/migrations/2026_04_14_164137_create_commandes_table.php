@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
+            $table->timestamp('date_commande')->useCurrent();
             $table->string('statut')->default('en_attente');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();

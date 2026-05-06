@@ -15,6 +15,6 @@ class Panier extends Model
 
     public function lignepaniers()
     {
-        return $this->hasMany(LignePanier::class);
+        return $this->hasMany(Lignepanier::class , 'panier_id');
     }
 }

@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lignecommande extends Model
 {
-    protected $fillable = ['quantite', 'prix_unitaire', 'commmande_id', 'produit_id'];
+    protected $fillable = ['quantite', 'prix_unitaire', 'commande_id', 'produit_id'];
 
     public function commande()
     {
-        return $this->belongsTo(Commande::class, 'commmande_id');
+        return $this->belongsTo(Commande::class, 'commande_id');
     }
     
     public function produit()

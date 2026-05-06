@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('quantite');
             $table->decimal('prix_unitaire', 8, 2);
-            $table->foreignId('commmande_id')->constrained('commandes')->onDelete('cascade');
+            $table->foreignId('commande_id')->constrained('commandes')->onDelete('cascade');
             $table->foreignId('produit_id')->constrained('produits')->onDelete('cascade');
             $table->timestamps();
         });

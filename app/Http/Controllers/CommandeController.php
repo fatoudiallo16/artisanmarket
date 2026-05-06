@@ -2,54 +2,81 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commande;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Route;
 
 class CommandeController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        return view('commandes.index');
+        $this->authorize('viewAny', Commande::class);
+
+        $query = Commande::query()->latest();
+        if (!Auth::user()->hasRole('admin')) {
+            $query->where('user_id', Auth::id());
+        }
+
+        $commandes = $query->paginate(15);
+
+        return view('commandes.index', compact('commandes'));
     }
 
-    public function create()
+    public function show(Commande $commande): View
     {
-        return view('commandes.create');
-    }
-
-    public function store(Request $request)
-    {
-        // Validate and store the commande data
-        // ...
-
-        return redirect()->route('commandes.index')->with('success', 'Commande created successfully.');
-    }
-
-    public function show($id)
-    {
-        // Retrieve and display the commande details
-        // ...
+        $this->authorize('view', $commande);
 
         return view('commandes.show', compact('commande'));
     }
 
-    public function edit($id)
+    public function store(Request $request): RedirectResponse
     {
-        // Retrieve the commande data for editing
-        // ...
+        $this->authorize('create', Commande::class);
 
-        return view('commandes.edit', compact('commande'));
+        $data = $request->validate([
+            'statut' => ['nullable', 'in:en_attente,en_cours,payee,annulee'],
+        ]);
+
+        $commande = Commande::create([
+            'user_id' => Auth::id(),
+            'statut' => $data['statut'] ?? 'en_attente',
+        ]);
+
+        return redirect()->route($this->routeName('show'), $commande)->with('success', 'Commande creee.');
     }
-    public function update(Request $request, $id)
+
+    public function update(Request $request, Commande $commande): RedirectResponse
     {
-        // Validate and update the commande data
-        // ...
+        $this->authorize('update', $commande);
 
-        return redirect()->route('commandes.index')->with('success', 'Commande updated successfully.');
+        $data = $request->validate([
+            'statut' => ['required', 'in:en_attente,en_cours,payee,annulee'],
+        ]);
+
+        $commande->update($data);
+
+        return redirect()->route($this->routeName('show'), $commande)->with('success', 'Commande mise a jour.');
     }
-    public function destroy($id)
-    {        // Delete the commande
-        // ...
 
-        return redirect()->route('commandes.index')->with('success', 'Commande deleted successfully.');
+    public function destroy(Commande $commande): RedirectResponse
+    {
+        $this->authorize('delete', $commande);
+
+        $commande->delete();
+
+        return redirect()->route($this->routeName('index'))->with('success', 'Commande supprimee.');
+    }
+
+    private function routeName(string $action): string
+    {
+        $adminRoute = 'admin.commandes.'.$action;
+        if (Route::has($adminRoute) && request()->routeIs('admin.*')) {
+            return $adminRoute;
+        }
+
+        return 'commandes.'.$action;
     }
 }

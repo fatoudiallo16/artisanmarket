@@ -17,4 +17,14 @@ class Produit extends Model
     {
         return $this->belongsTo(Categorie::class, 'categorie_id');
     }
+    
+    public function lignecommandes()
+    {
+        return $this->hasMany(Lignecommande::class, 'produit_id');
+    }
+    
+    public function lignepaniers()
+    {
+        return $this->hasMany(Lignepanier::class, 'produit_id');
+    }
 }

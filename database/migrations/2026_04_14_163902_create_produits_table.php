@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('prix', 8, 2);
             $table->integer('stock');
+            $table->date('Date_ajout')->useCurrent();
             $table->foreignId('vendeur_id')->constrained('vendeurs')->onDelete('cascade');
             $table->foreignId('categorie_id')->constrained('categories')->onDelete('cascade');
             $table->timestamps();

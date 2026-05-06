@@ -15,6 +15,16 @@ class Commande extends Model
 
     public function lignecommandes()
     {
-        return $this->hasMany(Lignecommande::class, 'commmande_id');
+        return $this->hasMany(Lignecommande::class, 'commande_id');
     }
+    public function paiement()
+    {
+        return $this->hasOne(Paiement::class, 'commande_id');
+    }
+
+    public function paiements()
+    {
+        return $this->paiement();
+    }
+    
 }

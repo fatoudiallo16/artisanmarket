@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'role_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -36,15 +36,55 @@ class User extends Authenticatable
         }
         public function commandes()
         {
-            return $this->hasMany(Commande::class);
+            return $this->hasMany(Commande::class, 'user_id');
         }   
         public function panier()
         {
-            return $this->hasOne(Panier::class);
+            return $this->hasOne(Panier::class, 'user_id');
         }
         public function vendeur()
         {
-            return $this->hasOne(Vendeur::class);
-        }        
+            return $this->hasOne(Vendeur::class, 'user_id' );
+        }
+        public function clientProfile()
+        {
+            return $this->hasOne(ClientProfile::class, 'user_id');
+        }
+        public function vendeurProfile()
+        {
+            return $this->hasOne(VendeurProfile::class, 'user_id');
+        }
+        public function adminProfile()
+        {
+            return $this->hasOne(AdminProfile::class, 'user_id');
+        }
+
+        public function hasRole(string ...$roles): bool
+        {
+            return $this->role !== null && in_array($this->role->nom_role, $roles, true);
+        }
+
+        public function syncProfileByRole(): void
+        {
+            if (!$this->role) {
+                return;
+            }
+
+            if ($this->role->nom_role === 'client') {
+                $this->clientProfile()->firstOrCreate([]);
+                return;
+            }
+
+            if ($this->role->nom_role === 'vendeur') {
+                $this->vendeurProfile()->firstOrCreate([
+                    'nom_boutique' => 'Boutique '.$this->name,
+                ]);
+                return;
+            }
+
+            if ($this->role->nom_role === 'admin') {
+                $this->adminProfile()->firstOrCreate([]);
+            }
+        }
 
 }

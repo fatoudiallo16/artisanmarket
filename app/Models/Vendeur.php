@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Vendeur extends Model
 {
-    protected $fillable = ['user_id'];
+    protected $fillable = ['user_id', 'id_utilisateur', 'statut', 'name', 'nom_boutique'];
 
     public function user()
     {
@@ -15,6 +15,6 @@ class Vendeur extends Model
 
     public function produits()
     {
-        return $this->hasMany(Produit::class);
+        return $this->hasMany(Produit::class, 'vendeur_id');
     }
 }
