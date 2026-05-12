@@ -22,9 +22,10 @@
         <nav class="navbar navbar-expand-lg am-navbar">
             <div class="container am-container">
                 <a class="navbar-brand am-brand" href="{{ url('/') }}">
-                    <img class="am-logo-img" src="{{ asset('assets/img/logo/artisan-market-logo.jpeg') }}" alt="Artisan Market">
+                    <span class="am-logo-mark">AM</span>
+                    <span class="am-logo-text">ARTISAN <span>MARKET</span></span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="#navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
