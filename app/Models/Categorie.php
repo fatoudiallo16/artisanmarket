@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Categorie extends Model
 {
-    protected $fillable = ['nom'];
+    protected $fillable = ['nom', 'nom_categorie'];
+
+    public function getNomAttribute(): ?string
+    {
+        return $this->attributes['nom'] ?? $this->attributes['nom_categorie'] ?? null;
+    }
 
     public function produits()
     {

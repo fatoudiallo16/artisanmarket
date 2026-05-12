@@ -3,17 +3,15 @@
 namespace App\Http\Controllers;
 use App\Http\Requests\AddToCartRequest;
 use App\Http\Requests\UpdateCartItemRequest;
-use App\Models\Lignepanier;
-use App\Models\Panier;
-use App\Models\Produit;
+use App\Services\CartService;
+use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class PanierController extends Controller
 {
-    public function __construct()
+    public function __construct(private CartService $cartService, private OrderService $orderService)
     {
         $this->middleware('auth');
     }
@@ -21,93 +19,68 @@ class PanierController extends Controller
     // afficher le panier de l'utilisateur
     public function index(): View
     {
-        $panier = Panier::firstOrCreate(['user_id' => Auth::id()]);
-        $articles = Lignepanier::with('produit')
-            ->where('panier_id', $panier->id)
-            ->get();
+        $articles = $this->cartService->getCartItems(Auth::id());
+        $total = $this->cartService->calculateCartTotal(Auth::id());
 
-        return view('panier.index', ['articles' => $articles]);
+        return view('panier.index', ['articles' => $articles, 'total' => $total]);
     }
 
     // ajouter un produit au panier
     public function store(AddToCartRequest $request): RedirectResponse
     {
-        $panier = Panier::firstOrCreate(['user_id' => Auth::id()]);
-        $produit = Produit::findOrFail((int) $request->validated('produit_id'));
+        $produitId = (int) $request->validated('produit_id');
         $quantite = (int) ($request->validated('quantite') ?? 1);
 
-        $article = Lignepanier::firstOrNew([
-            'panier_id' => $panier->id,
-            'produit_id' => $produit->id,
-        ]);
-
-        $article->quantite = $article->exists ? $article->quantite + $quantite : $quantite;
-        $article->prix_unitaire = $produit->prix;
-        $article->save();
-
-        return redirect()->route('panier.index');
+        try {
+            $this->cartService->addToCart($produitId, $quantite, Auth::id());
+            return redirect()->route('panier.index')->with('success', 'Produit ajouté au panier.');
+        } catch (\Exception $e) {
+            return redirect()->route('panier.index')->with('error', $e->getMessage());
+        }
     }
 
-    public function update(UpdateCartItemRequest $request, Produit $produit): RedirectResponse
+    public function update(UpdateCartItemRequest $request, $produitId): RedirectResponse
     {
-        $panier = Panier::where('user_id', Auth::id())->first();
-        if (!$panier) {
-            return redirect()->route('panier.index');
+        $quantite = (int) $request->validated('quantite');
+
+        try {
+            $this->cartService->updateQuantity($produitId, $quantite, Auth::id());
+            return redirect()->route('panier.index')->with('success', 'Quantité mise à jour.');
+        } catch (\Exception $e) {
+            return redirect()->route('panier.index')->with('error', $e->getMessage());
         }
-
-        $article = Lignepanier::where('panier_id', $panier->id)
-            ->where('produit_id', $produit->id)
-            ->first();
-
-        if ($article) {
-            $article->quantite = (int) $request->validated('quantite');
-            $article->save();
-        }
-
-        return redirect()->route('panier.index');
     }
 
     // supprimer un produit du panier
-    public function destroy(Produit $produit): RedirectResponse
+    public function destroy($produitId): RedirectResponse
     {
-        $panier = Panier::where('user_id', Auth::id())->first();
-        if (!$panier) {
-            return redirect()->route('panier.index');
-        }
-
-        Lignepanier::where('panier_id', $panier->id)
-            ->where('produit_id', $produit->id)
-            ->delete();
-
-        return redirect()->route('panier.index');
+        $this->cartService->removeFromCart($produitId, Auth::id());
+        return redirect()->route('panier.index')->with('success', 'Produit supprimé du panier.');
     }
 
     // vider le panier
     public function clear(): RedirectResponse
     {
-        $panier = Panier::where('user_id', Auth::id())->first();
-        if (!$panier) {
-            return redirect()->route('panier.index');
-        }
-
-        Lignepanier::where('panier_id', $panier->id)->delete();
-
-        return redirect()->route('panier.index');
+        $this->cartService->clearCart(Auth::id());
+        return redirect()->route('panier.index')->with('success', 'Panier vidé.');
     }
 
     // validation du panier (passer la commande)
     public function checkout(): RedirectResponse
     {
-        $panier = Panier::where('user_id', Auth::id())->first();
-        if (!$panier) {
-            return redirect()->route('panier.index');
+        try {
+            $articles = $this->cartService->getCartItems(Auth::id())->map(fn($article) => [
+                'produit_id' => $article->produit_id,
+                'quantite' => $article->quantite,
+                'prix_unitaire' => $article->prix_unitaire,
+            ])->toArray();
+
+            $commande = $this->orderService->createFromCart(Auth::id(), $articles);
+            
+            return redirect()->route('commandes.index')->with('success', 'Commande créée avec succès. Procédez au paiement.');
+        } catch (\Exception $e) {
+            return redirect()->route('panier.index')->with('error', $e->getMessage());
         }
-
-        DB::transaction(function () use ($panier): void {
-            Lignepanier::where('panier_id', $panier->id)->delete();
-        });
-
-        return redirect()->route('commandes.index')->with('success', 'Commande validee avec succes.');
     }
 
 }

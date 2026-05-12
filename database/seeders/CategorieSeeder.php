@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Categorie;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CategorieSeeder extends Seeder
 {
@@ -13,10 +13,10 @@ class CategorieSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('categories')->insert([
-            ['nom' => 'tissus'],
-            ['nom' => 'pot en terre cuite'],
-            ['nom' => 'bijoux'],
-        ]);
+        $column = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+
+        foreach (['tissus', 'pot en terre cuite', 'bijoux'] as $name) {
+            Categorie::firstOrCreate([$column => $name]);
+        }
     }
 }

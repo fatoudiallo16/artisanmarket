@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Annonce;
 use App\Models\Commande;
 use App\Models\Paiement;
 use App\Models\Produit;
+use App\Policies\AnnoncePolicy;
 use App\Policies\CommandePolicy;
 use App\Policies\PaiementPolicy;
 use App\Policies\ProduitPolicy;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Annonce::class, AnnoncePolicy::class);
         Gate::policy(Commande::class, CommandePolicy::class);
         Gate::policy(Paiement::class, PaiementPolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
