@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Annonce;
+use App\Models\Commande;
+use App\Models\Produit;
+use App\Models\User;
+use App\Models\Vendeur;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -23,6 +28,39 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        /** @var User $user */
+        $user = Auth::user();
+        $user->loadMissing('role', 'vendeur', 'vendeurProfile');
+
+        if ($user->hasRole('admin')) {
+            return view('dashboards.admin', [
+                'stats' => [
+                    'users' => User::count(),
+                    'vendeurs' => Vendeur::count(),
+                    'demandes' => Vendeur::where('statut', 'en_attente')->count(),
+                    'produits' => Produit::count(),
+                    'commandes' => Commande::count(),
+                    'annonces' => Annonce::count(),
+                ],
+                'recent_vendeurs' => Vendeur::with('user')->latest()->limit(6)->get(),
+                'recent_annonces' => Annonce::with('user')->latest()->limit(5)->get(),
+            ]);
+        }
+
+        if ($user->hasRole('vendeur')) {
+            $vendeur = $user->vendeur;
+
+            return view('dashboards.vendeur', [
+                'vendeur' => $vendeur,
+                'produits' => $vendeur ? $vendeur->produits()->with('categorie')->latest()->get() : collect(),
+                'categoriesCount' => $vendeur ? $vendeur->produits()->distinct('categorie_id')->count('categorie_id') : 0,
+            ]);
+        }
+
+        return view('dashboards.client', [
+            'demande' => $user->vendeur,
+            'produits' => Produit::with(['vendeur', 'categorie'])->latest()->limit(6)->get(),
+            'annonces' => Annonce::latest()->limit(3)->get(),
+        ]);
     }
 }

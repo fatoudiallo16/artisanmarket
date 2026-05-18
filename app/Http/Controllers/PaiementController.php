@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Commande;
 use App\Models\Paiement;
+use App\Models\User;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -12,12 +14,17 @@ use Illuminate\Support\Facades\Route;
 
 class PaiementController extends Controller
 {
+    public function __construct(private PaymentService $paymentService)
+    {
+    }
     public function index(): View
     {
         $this->authorize('viewAny', Paiement::class);
 
+        /** @var User|null $user */
+        $user = Auth::user();
         $query = Paiement::with('commande')->latest();
-        if (!Auth::user()->hasRole('admin')) {
+        if ($user && !$user->hasRole('admin')) {
             $query->whereHas('commande', function ($q): void {
                 $q->where('user_id', Auth::id());
             });
@@ -47,19 +54,19 @@ class PaiementController extends Controller
         ]);
 
         $commande = Commande::findOrFail((int) $data['commande_id']);
-        if (!Auth::user()->hasRole('admin') && (int) $commande->user_id !== (int) Auth::id()) {
-            abort(403, 'Commande non autorisee pour ce paiement.');
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user && !$user->hasRole('admin') && (int) $commande->user_id !== (int) Auth::id()) {
+            abort(403, 'Commande non autorisée pour ce paiement.');
         }
 
-        $paiement = Paiement::create([
-            'commande_id' => $commande->id,
-            'montant' => $data['montant'],
-            'mode_paiement' => $data['mode_paiement'],
-            'statut' => $data['statut'] ?? 'en_attente',
-            'date_paiement' => now(),
-        ]);
+        $paiement = $this->paymentService->createPayment(
+            $commande->id,
+            $data['montant'],
+            $data['mode_paiement']
+        );
 
-        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement enregistre.');
+        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement enregistré.');
     }
 
     public function update(Request $request, Paiement $paiement): RedirectResponse
@@ -71,9 +78,17 @@ class PaiementController extends Controller
             'mode_paiement' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $paiement->update($data);
+        if ($data['statut'] === 'paye') {
+            $this->paymentService->markAsPaid($paiement);
+        } elseif ($data['statut'] === 'rembourse') {
+            $this->paymentService->refundPayment($paiement);
+        } elseif ($data['statut'] === 'echoue') {
+            $this->paymentService->markAsFailed($paiement);
+        } else {
+            $paiement->update($data);
+        }
 
-        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement mis a jour.');
+        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement mis à jour.');
     }
 
     public function destroy(Paiement $paiement): RedirectResponse

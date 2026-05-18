@@ -3,19 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produit;
+use App\Models\Categorie;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
+use Throwable;
 
 class ProduitController extends Controller
 {
     // afficher la liste des produits
-    public function index(): View
+    public function index(Request $request): View
     {
-        $produits = Produit::latest()->paginate(12);
+        try {
+            $query = Produit::with(['vendeur', 'categorie']);
 
-        return view('produits.index', compact('produits'));
+            if ($request->filled('q')) {
+                $search = $request->string('q')->toString();
+                $query->where(function ($builder) use ($search) {
+                    $builder->where('nom', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+
+            if ($request->filled('categorie')) {
+                $category = $request->string('categorie')->lower()->toString();
+                $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
+                    $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
+                });
+            }
+
+            match ($request->input('sort')) {
+                'prix_asc' => $query->orderBy('prix'),
+                'prix_desc' => $query->orderByDesc('prix'),
+                'nouveautes' => $query->latest(),
+                default => $query->latest(),
+            };
+
+            $produits = $query->paginate(12)->withQueryString();
+            $categories = Categorie::withCount('produits')->get();
+        } catch (Throwable) {
+            $categoryColumn = 'nom';
+            $categories = collect();
+            $produits = new LengthAwarePaginator(collect(), 0, 12, 1, [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]);
+        }
+
+        return view('produits.index', compact('produits', 'categories', 'categoryColumn'));
     }
 
     // aficher un produit en detail
@@ -28,7 +68,10 @@ class ProduitController extends Controller
     {
         $this->authorize('create', Produit::class);
 
-        return view('produits.create');
+        return view('produits.create', [
+            'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
+            'vendeurs' => Auth::user()->hasRole('admin') ? \App\Models\Vendeur::where('statut', 'approuve')->orderBy('nom_boutique')->get() : collect(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,14 +90,17 @@ class ProduitController extends Controller
         $data['vendeur_id'] = $this->resolveVendeurId($request);
         Produit::create($data);
 
-        return redirect()->route('produits.index')->with('success', 'Produit cree avec succes.');
+        return redirect()->route(Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home')->with('success', 'Produit cree avec succes.');
     }
 
     public function edit(Produit $produit): View
     {
         $this->authorize('update', $produit);
 
-        return view('produits.edit', compact('produit'));
+        return view('produits.edit', [
+            'produit' => $produit,
+            'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
+        ]);
     }
 
     public function update(Request $request, Produit $produit): RedirectResponse

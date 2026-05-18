@@ -24,7 +24,7 @@ class Commande extends Model
 
     public function paiements()
     {
-        return $this->paiement();
+        return $this->hasMany(Paiement::class, 'commande_id');
     }
     
 }
