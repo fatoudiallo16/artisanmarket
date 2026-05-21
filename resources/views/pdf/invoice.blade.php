@@ -56,7 +56,7 @@
     </div>
 
     <p style="margin-top: 40px; font-size: 10px; color: #888;">
-        Merci pour votre achat sur Artisan Market. Ce document fait foi de votre paiement enregistré en base.
+        Merci pour votre achat sur Artisan Market. Ce document fait foi de votre paiement enregistré.
     </p>
 </body>
 </html>
