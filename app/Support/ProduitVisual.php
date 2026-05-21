@@ -6,6 +6,27 @@ use App\Models\Produit;
 
 class ProduitVisual
 {
+    /** @return list<string> */
+    public static function productImages(): array
+    {
+        return [
+            asset('assets/img/product/product-1.jpg'),
+            asset('assets/img/product/product-2.jpg'),
+            asset('assets/img/product/product-3.jpg'),
+            asset('assets/img/product/product-4.jpg'),
+            asset('assets/img/product/product-5.jpg'),
+            asset('assets/img/product/product-6.jpg'),
+        ];
+    }
+
+    public static function imageUrl(Produit|int $produitOrId, ?int $loopIndex = null): string
+    {
+        $images = self::productImages();
+        $index = $loopIndex ?? (is_int($produitOrId) ? $produitOrId : $produitOrId->id);
+
+        return $images[$index % count($images)];
+    }
+
     /** @return array{slug: string, label: string, class: string, icon: string} */
     public static function forProduit(Produit $produit): array
     {

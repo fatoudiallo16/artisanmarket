@@ -42,8 +42,11 @@
                     };
                 @endphp
                 <a href="{{ route('produits.index', ['categorie' => $name]) }}" class="am-category-card {{ $cardClass }}">
+                    <span class="am-category-card-icon" aria-hidden="true">
+                        @if(str_contains($slug, 'bijou'))◇@elseif(str_contains($slug, 'tissu'))▦@else◉@endif
+                    </span>
                     <h3>{{ ucfirst($name) }}</h3>
-                    <p>{{ $categorie->produits_count }} produit(s)</p>
+                    <p>{{ $categorie->produits_count }} produit{{ $categorie->produits_count > 1 ? 's' : '' }}</p>
                 </a>
             @empty
                 <p class="text-muted">Aucune catégorie en base pour le moment.</p>
@@ -54,12 +57,12 @@
 
 <section class="am-section pt-0">
     <div class="container am-container">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div class="am-section-head">
             <div>
-                <h2 class="am-section-title mb-2">Produits en Vedette</h2>
-                <p class="am-page-lead m-0">Découvrez notre sélection de produits d'exception</p>
+                <h2 class="am-section-title">Produits en vedette</h2>
+                <p class="am-section-lead">Découvrez notre sélection de pièces d'exception</p>
             </div>
-            <a class="fw-bold text-danger" href="{{ route('produits.index') }}">Tout voir -></a>
+            <a class="am-link-arrow" href="{{ route('produits.index') }}">Tout voir</a>
         </div>
         @include('produits.partials.grid', ['produits' => $produitsEnVedette])
     </div>

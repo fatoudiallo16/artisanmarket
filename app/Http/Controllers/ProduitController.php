@@ -50,7 +50,16 @@ class ProduitController extends Controller
     // aficher un produit en detail
     public function show(Produit $produit): View
     {
-        return view('produits.show', compact('produit'));
+        $produit->load(['vendeur', 'categorie']);
+
+        $related = Produit::with(['vendeur', 'categorie'])
+            ->where('categorie_id', $produit->categorie_id)
+            ->where('id', '!=', $produit->id)
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
+        return view('produits.show', compact('produit', 'related'));
     }
 
     public function create(): View
