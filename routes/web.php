@@ -1,12 +1,36 @@
 <?php
 
 use App\Http\Controllers\AnnonceController;
+use App\Http\Controllers\PanierController;
+use App\Http\Controllers\ProduitController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-  return view('index');  
+    return view('pages.home');
+    
 });
+
+
+// routes/web.php
+
+Route::get('/produits', function () {
+    return view('produits.index');
+});
+Route::middleware(['auth'])->group(function () {
+
+    Route::resource(
+        'seller/products',
+        ProduitController::class
+    );
+
+});
+
+Route::post('/Panier/add', [PanierController::class, 'add']);
+Route::get('/Panier', [PanierController::class, 'index']);
+Route::post('/Panier/update', [PanierController::class, 'update']);
+Route::post('/Panier/remove', [PanierController::class, 'remove']);
+
 Auth::routes();     
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->names('annonces');

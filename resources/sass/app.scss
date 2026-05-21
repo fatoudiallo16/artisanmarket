@@ -4,5 +4,14 @@
 // Variables
 @import 'variables';
 
-// Bootstrap
-@import 'bootstrap/scss/bootstrap';
+// Tailwind
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Nunito', sans-serif;
+}
