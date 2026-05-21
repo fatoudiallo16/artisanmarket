@@ -76,6 +76,7 @@ class ProduitController extends Controller
     public function create(): View
     {
         $this->authorize('create', Produit::class);
+        $this->ensureCanManageProducts();
 
         return view('produits.create', [
             'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
@@ -86,6 +87,7 @@ class ProduitController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Produit::class);
+        $this->ensureCanManageProducts();
 
         $data = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
@@ -106,8 +108,10 @@ class ProduitController extends Controller
 
         $produit = Produit::create($data);
 
+        $redirectRoute = Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home';
+
         return redirect()
-            ->route('produits.show', $produit)
+            ->route($redirectRoute)
             ->with('success', 'Produit créé avec succès.');
     }
 
@@ -171,5 +175,28 @@ class ProduitController extends Controller
         }
 
         abort(403, 'Aucun profil vendeur associé à ce compte.');
+    }
+
+    private function ensureCanManageProducts(): void
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin')) {
+            return;
+        }
+
+        if (!$user->hasRole('vendeur')) {
+            abort(403, 'Seuls les vendeurs et administrateurs peuvent gérer des produits.');
+        }
+
+        $vendeur = $user->vendeur;
+
+        if (!$vendeur) {
+            abort(403, 'Aucune boutique associée à votre compte. Contactez l\'administrateur.');
+        }
+
+        if (!$vendeur->isActive()) {
+            abort(403, 'Votre boutique doit être approuvée par un administrateur avant d\'ajouter des produits.');
+        }
     }
 }

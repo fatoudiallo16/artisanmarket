@@ -14,8 +14,9 @@ Route::resource('produits', App\Http\Controllers\ProduitController::class)
 Route::get('boutiques/{vendeur}', [App\Http\Controllers\VendeurController::class, 'boutique'])
     ->name('boutiques.show');
 
-Route::middleware(['auth', 'role:vendeur'])->group(function () {
+Route::middleware(['auth', 'role:vendeur,admin'])->group(function () {
     Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])
+        ->middleware('role:vendeur')
         ->name('vendeur.boutique.update');
     Route::resource('produits', App\Http\Controllers\ProduitController::class)
         ->except(['index', 'show'])

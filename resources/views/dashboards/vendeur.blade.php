@@ -67,7 +67,14 @@
                 <div class="am-panel">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                         <h2 class="h3 fw-bold mb-0">Mes produits</h2>
-                        <a class="btn am-btn-primary" href="{{ route('produits.create') }}">Ajouter un produit</a>
+                        @can('create', App\Models\Produit::class)
+                            @if($vendeur?->isActive())
+                                <a class="btn am-btn-primary" href="{{ route('produits.create') }}">Ajouter un produit</a>
+                            @else
+                                <span class="btn am-btn-primary disabled" title="Boutique en attente de validation">Ajouter un produit</span>
+                                <p class="text-muted small mt-2 mb-0">Votre boutique doit être <strong>approuvée</strong> par un admin pour publier des produits.</p>
+                            @endif
+                        @endcan
                     </div>
                     @include('produits.partials.grid', ['produits' => $produits, 'allowFallback' => false])
                 </div>
