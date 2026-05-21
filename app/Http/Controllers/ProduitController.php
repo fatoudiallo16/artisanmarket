@@ -6,54 +6,43 @@ use App\Models\Produit;
 use App\Models\Categorie;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
-use Throwable;
 
 class ProduitController extends Controller
 {
     // afficher la liste des produits
     public function index(Request $request): View
     {
-        try {
-            $query = Produit::with(['vendeur', 'categorie']);
+        $query = Produit::with(['vendeur', 'categorie']);
 
-            if ($request->filled('q')) {
-                $search = $request->string('q')->toString();
-                $query->where(function ($builder) use ($search) {
-                    $builder->where('nom', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
-
-            $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
-
-            if ($request->filled('categorie')) {
-                $category = $request->string('categorie')->lower()->toString();
-                $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
-                    $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
-                });
-            }
-
-            match ($request->input('sort')) {
-                'prix_asc' => $query->orderBy('prix'),
-                'prix_desc' => $query->orderByDesc('prix'),
-                'nouveautes' => $query->latest(),
-                default => $query->latest(),
-            };
-
-            $produits = $query->paginate(12)->withQueryString();
-            $categories = Categorie::withCount('produits')->get();
-        } catch (Throwable) {
-            $categoryColumn = 'nom';
-            $categories = collect();
-            $produits = new LengthAwarePaginator(collect(), 0, 12, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
+        if ($request->filled('q')) {
+            $search = $request->string('q')->toString();
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nom', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
+
+        $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+
+        if ($request->filled('categorie')) {
+            $category = $request->string('categorie')->lower()->toString();
+            $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
+                $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
+            });
+        }
+
+        match ($request->input('sort')) {
+            'prix_asc' => $query->orderBy('prix'),
+            'prix_desc' => $query->orderByDesc('prix'),
+            'nouveautes' => $query->latest(),
+            default => $query->latest(),
+        };
+
+        $produits = $query->paginate(12)->withQueryString();
+        $categories = Categorie::withCount('produits')->get();
 
         return view('produits.index', compact('produits', 'categories', 'categoryColumn'));
     }

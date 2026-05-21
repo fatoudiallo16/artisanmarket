@@ -100,7 +100,7 @@ class OrderService
             Paiement::create([
                 'commande_id' => $commande->id,
                 'montant' => $montantTotal,
-                'mode_paiement' => 'en_attente',
+                'mode_paiement' => 'en_ligne',
                 'statut' => 'en_attente',
                 'date_paiement' => now(),
             ]);
@@ -127,24 +127,15 @@ class OrderService
      */
     public function cancel(int $commandeId): bool
     {
-        return DB::transaction(function () use ($commandeId) {
-            $commande = Commande::findOrFail($commandeId);
+        $commande = Commande::with('lignecommandes.produit')->findOrFail($commandeId);
+        $this->cancelOrder($commande);
 
-            // Ne peut annuler que si pas encore payée
-            if ($commande->statut === 'payee') {
-                throw new \Exception('Impossible d\'annuler une commande payée.');
-            }
+        $paiement = Paiement::where('commande_id', $commandeId)->first();
+        if ($paiement && $paiement->statut === 'en_attente') {
+            $paiement->update(['statut' => 'echoue']);
+        }
 
-            $commande->update(['statut' => 'annulee']);
-
-            // Annuler le paiement associé
-            $paiement = Paiement::where('commande_id', $commandeId)->first();
-            if ($paiement && $paiement->statut !== 'paye') {
-                $paiement->update(['statut' => 'annulee']);
-            }
-
-            return true;
-        });
+        return true;
     }
 
     /**
@@ -168,12 +159,18 @@ class OrderService
         }
 
         DB::transaction(function () use ($commande) {
-            // Restaurer le stock
             foreach ($commande->lignecommandes as $ligne) {
-                $ligne->produit->increment('stock', $ligne->quantite);
+                if ($ligne->produit) {
+                    $ligne->produit->increment('stock', $ligne->quantite);
+                }
             }
 
             $commande->update(['statut' => 'annulee']);
+
+            $paiement = Paiement::where('commande_id', $commande->id)->first();
+            if ($paiement && $paiement->statut === 'en_attente') {
+                $paiement->update(['statut' => 'echoue']);
+            }
         });
     }
 

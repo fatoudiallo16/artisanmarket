@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Requests\AddToCartRequest;
 use App\Http\Requests\UpdateCartItemRequest;
+use App\Models\Produit;
 use App\Services\CartService;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
@@ -32,10 +33,17 @@ class PanierController extends Controller
         $quantite = (int) ($request->validated('quantite') ?? 1);
 
         try {
+            $produit = Produit::findOrFail($produitId);
             $this->cartService->addToCart($produitId, $quantite, Auth::id());
-            return redirect()->route('panier.index')->with('success', 'Produit ajouté au panier.');
+
+            return redirect()->back()->with('cart_added', [
+                'nom' => $produit->nom,
+                'quantite' => $quantite,
+                'cart_count' => $this->cartService->getCartCount(Auth::id()),
+                'cart_total' => $this->cartService->calculateCartTotal(Auth::id()),
+            ]);
         } catch (\Exception $e) {
-            return redirect()->route('panier.index')->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
@@ -68,16 +76,16 @@ class PanierController extends Controller
     // validation du panier (passer la commande)
     public function checkout(): RedirectResponse
     {
-        try {
-            $articles = $this->cartService->getCartItems(Auth::id())->map(fn($article) => [
-                'produit_id' => $article->produit_id,
-                'quantite' => $article->quantite,
-                'prix_unitaire' => $article->prix_unitaire,
-            ])->toArray();
+        if ($this->cartService->getCartItems(Auth::id())->isEmpty()) {
+            return redirect()->route('panier.index')->with('error', 'Votre panier est vide.');
+        }
 
-            $commande = $this->orderService->createFromCart(Auth::id(), $articles);
-            
-            return redirect()->route('commandes.index')->with('success', 'Commande créée avec succès. Procédez au paiement.');
+        try {
+            $commande = $this->orderService->createOrderFromCart(Auth::id());
+
+            return redirect()
+                ->route('commandes.show', $commande)
+                ->with('success', 'Commande créée. Procédez au paiement.');
         } catch (\Exception $e) {
             return redirect()->route('panier.index')->with('error', $e->getMessage());
         }

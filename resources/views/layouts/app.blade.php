@@ -55,9 +55,12 @@
                         </li>
                         @auth
                             @if(Auth::user()->hasRole('client'))
-                                <li class="nav-item d-none d-lg-block">
-                                    <a class="am-icon-link" href="{{ route('panier.index') }}" aria-label="Panier">
+                                <li class="nav-item d-none d-lg-block position-relative">
+                                    <a class="am-icon-link" href="{{ route('panier.index') }}" aria-label="Panier{{ ($cartCount ?? 0) > 0 ? ' — ' . $cartCount . ' article(s)' : '' }}">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-1.7 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.5L5 3H2m7 18h.01M18 21h.01"/></svg>
+                                        @if(($cartCount ?? 0) > 0)
+                                            <span class="am-cart-badge">{{ $cartCount }}</span>
+                                        @endif
                                     </a>
                                 </li>
                             @endif
@@ -99,7 +102,25 @@
         </nav>
 
         <main>
-            @if(session('success') || session('error'))
+            @if(session('cart_added'))
+                @php($added = session('cart_added'))
+                <div class="container am-container pt-3">
+                    <div class="am-cart-notice" role="status">
+                        <div class="am-cart-notice-body">
+                            <strong>Ajouté au panier</strong>
+                            <p class="mb-0">
+                                {{ $added['quantite'] }} × {{ $added['nom'] }}
+                                — {{ number_format((float) ($added['cart_total'] ?? 0), 0, ',', ' ') }} FCFA
+                                ({{ $added['cart_count'] }} article(s) dans le panier)
+                            </p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn am-btn-primary btn-sm" href="{{ route('panier.index') }}">Voir le panier</a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-am-dismiss-notice>Continuer</button>
+                        </div>
+                    </div>
+                </div>
+            @elseif(session('success') || session('error'))
                 <div class="container am-container pt-3">
                     <div class="alert {{ session('success') ? 'alert-success' : 'alert-danger' }} mb-0">
                         {{ session('success') ?? session('error') }}
@@ -110,5 +131,10 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('[data-am-dismiss-notice]').forEach((btn) => {
+            btn.addEventListener('click', () => btn.closest('.am-cart-notice')?.remove());
+        });
+    </script>
 </body>
 </html>

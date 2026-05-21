@@ -91,9 +91,9 @@
                             <span>Total</span>
                             <span class="am-price">{{ number_format((float) $total, 0, ',', ' ') }} FCFA</span>
                         </p>
-                        <form method="POST" action="{{ route('panier.checkout') }}">
+                        <form method="POST" action="{{ route('panier.checkout') }}" onsubmit="return confirm('Confirmer la commande ? Le stock sera réservé.');">
                             @csrf
-                            <button type="submit" class="btn am-btn-primary w-100 mb-2">Passer la commande</button>
+                            <button type="submit" class="btn am-btn-primary w-100 mb-2" {{ $articles->isEmpty() ? 'disabled' : '' }}>Passer la commande</button>
                         </form>
                         <a class="btn btn-outline-secondary w-100" href="{{ route('produits.index') }}">Continuer mes achats</a>
                     </div>

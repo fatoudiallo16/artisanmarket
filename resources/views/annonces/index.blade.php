@@ -15,27 +15,23 @@
     </div>
 </section>
 
-@php
-    $fallbackAnnouncements = collect([
-        (object) ['id' => 1, 'titre' => 'Promotion Spéciale Bijoux - 20% de Réduction', 'contenu' => "Profitez de 20% de réduction sur tous nos bijoux artisanaux jusqu'au 30 mai 2026. Une occasion unique de découvrir notre collection de colliers, bracelets et boucles d'oreilles faits main.", 'date_publication' => '2026-05-10', 'type' => 'promotion'],
-        (object) ['id' => 2, 'titre' => 'Festival des Artisans à Bamako', 'contenu' => 'Retrouvez-nous au Festival des Artisans de Bamako du 15 au 20 juin 2026. Venez découvrir nos nouveaux produits et rencontrer nos artisans. Stand numéro 42, zone artisanale.', 'date_publication' => '2026-05-08', 'type' => 'event'],
-        (object) ['id' => 3, 'titre' => 'Nouvelle Collection de Tissus Bogolan', 'contenu' => 'Nous sommes fiers de vous présenter notre nouvelle collection de tissus bogolan, teints avec des teintures naturelles. Des motifs traditionnels revisités pour un style contemporain.', 'date_publication' => '2026-05-12', 'type' => 'news'],
-    ]);
-    $items = isset($annonces) && $annonces->count() ? $annonces : $fallbackAnnouncements;
-@endphp
-
 <section>
     <div class="container am-container">
+        @if($annonces->isEmpty())
+            <div class="am-panel text-center py-5">
+                <p class="text-muted mb-0">Aucune annonce publiée pour le moment.</p>
+            </div>
+        @else
         <div class="am-announcement-list">
-            @foreach($items as $annonce)
+            @foreach($annonces as $annonce)
                 @php
-                    $type = $annonce->type ?? match (true) {
+                    $type = match (true) {
                         str_contains(strtolower($annonce->titre), 'promotion') => 'promotion',
                         str_contains(strtolower($annonce->titre), 'festival') || str_contains(strtolower($annonce->titre), 'événement') => 'event',
                         default => 'news',
                     };
                     $label = ['promotion' => 'Promotion', 'event' => 'Événement', 'news' => 'Actualité'][$type] ?? 'Actualité';
-                    $date = $annonce->date_publication ?? $annonce->created_at ?? now();
+                    $date = $annonce->date_publication ?? $annonce->created_at;
                 @endphp
                 <article class="am-announcement-card {{ $type }}">
                     <div class="am-announcement-icon">
@@ -55,9 +51,9 @@
                         <h2>{{ $annonce->titre }}</h2>
                         <p>{{ $annonce->contenu }}</p>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <a class="fw-bold text-danger" href="{{ route('annonces.show', $annonce->id) }}">Voir plus -></a>
+                            <a class="fw-bold text-danger" href="{{ route('annonces.show', $annonce) }}">Voir plus -></a>
                             @auth
-                                @if(Auth::user()->hasRole('admin') && $annonce instanceof \App\Models\Annonce)
+                                @if(Auth::user()->hasRole('admin'))
                                     <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.annonces.edit', $annonce) }}">Modifier</a>
                                     <form method="POST" action="{{ route('admin.annonces.destroy', $annonce) }}">
                                         @csrf
@@ -72,8 +68,7 @@
             @endforeach
         </div>
 
-        @if(isset($annonces) && method_exists($annonces, 'links'))
-            <div class="pb-5">{{ $annonces->links() }}</div>
+        <div class="pb-5">{{ $annonces->links() }}</div>
         @endif
     </div>
 </section>

@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             CategorieSeeder::class,
+            MarketplaceSeeder::class,
+            ProduitArtisanalMaliSeeder::class,
         ]);
 
         $adminRole = Role::where('nom_role', 'admin')->first();

@@ -4,9 +4,7 @@ use App\Http\Controllers\AnnonceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-  return view('index');  
-});
+Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
 Auth::routes();     
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->names('annonces');
@@ -32,6 +30,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('panier/{produit}', [App\Http\Controllers\PanierController::class, 'destroy'])->name('panier.destroy');
         Route::delete('panier', [App\Http\Controllers\PanierController::class, 'clear'])->name('panier.clear');
         Route::post('panier/checkout', [App\Http\Controllers\PanierController::class, 'checkout'])->name('panier.checkout');
+        Route::post('paiements/{paiement}/pay', [App\Http\Controllers\PaiementController::class, 'pay'])
+            ->name('paiements.pay');
+        Route::get('paiements/{paiement}/facture', [App\Http\Controllers\PaiementController::class, 'invoice'])
+            ->name('paiements.invoice');
         Route::resource('paiements', App\Http\Controllers\PaiementController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy'])
             ->names('paiements');

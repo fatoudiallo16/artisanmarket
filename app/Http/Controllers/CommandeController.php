@@ -74,10 +74,10 @@ class CommandeController extends Controller
         $this->authorize('delete', $commande);
 
         try {
-            $this->orderService->cancel($commande->id);
+            $this->orderService->cancelOrder($commande);
             return redirect()->route($this->routeName('index'))->with('success', 'Commande annulée.');
         } catch (\Exception $e) {
-            return redirect()->route($this->routeName('index'))->with('error', $e->getMessage());
+            return redirect()->route($this->routeName('show'), $commande)->with('error', $e->getMessage());
         }
     }
 

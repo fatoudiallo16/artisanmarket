@@ -4,15 +4,20 @@ namespace App\Services;
 
 use App\Models\Paiement;
 use App\Models\Commande;
+use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
+    public function __construct(private InvoiceService $invoiceService)
+    {
+    }
+
     /**
      * Créer un paiement
      */
     public function createPayment(int $commandeId, float $montant, string $modePaiement): Paiement
     {
-        $commande = Commande::findOrFail($commandeId);
+        Commande::findOrFail($commandeId);
 
         return Paiement::create([
             'commande_id' => $commandeId,
@@ -24,12 +29,29 @@ class PaymentService
     }
 
     /**
-     * Marquer un paiement comme payé
+     * Enregistrer le paiement en base et générer la facture PDF.
      */
-    public function markAsPaid(Paiement $paiement): void
+    public function markAsPaid(Paiement $paiement, ?string $modePaiement = null): Paiement
     {
-        $paiement->update(['statut' => 'paye']);
-        $paiement->commande->update(['statut' => 'payee']);
+        return DB::transaction(function () use ($paiement, $modePaiement) {
+            $updates = [
+                'statut' => 'paye',
+                'date_paiement' => now(),
+            ];
+
+            if ($modePaiement) {
+                $updates['mode_paiement'] = $modePaiement;
+            }
+
+            if (!$paiement->numero_facture) {
+                $updates['numero_facture'] = $this->invoiceService->generateInvoiceNumber($paiement);
+            }
+
+            $paiement->update($updates);
+            $paiement->commande->update(['statut' => 'payee']);
+
+            return $this->invoiceService->generateAndStore($paiement->fresh());
+        });
     }
 
     /**
@@ -50,18 +72,16 @@ class PaymentService
         }
 
         $paiement->update(['statut' => 'rembourse']);
-        
-        // Restaurer le stock
+
         foreach ($paiement->commande->lignecommandes as $ligne) {
-            $ligne->produit->increment('stock', $ligne->quantite);
+            if ($ligne->produit) {
+                $ligne->produit->increment('stock', $ligne->quantite);
+            }
         }
 
         $paiement->commande->update(['statut' => 'annulee']);
     }
 
-    /**
-     * Obtenir le montant total payé pour une commande
-     */
     public function getTotalPaidForOrder(Commande $commande): float
     {
         return $commande->paiements()
@@ -69,31 +89,21 @@ class PaymentService
             ->sum('montant');
     }
 
-    /**
-     * Vérifier si une commande est totalement payée
-     */
     public function isOrderFullyPaid(Commande $commande): bool
     {
         $totalDue = $commande->lignecommandes->sum(function ($ligne) {
             return $ligne->quantite * $ligne->prix_unitaire;
         });
 
-        $totalPaid = $this->getTotalPaidForOrder($commande);
-
-        return $totalPaid >= $totalDue;
+        return $this->getTotalPaidForOrder($commande) >= $totalDue;
     }
 
-    /**
-     * Obtenir le montant restant à payer
-     */
     public function getRemainingAmount(Commande $commande): float
     {
         $totalDue = $commande->lignecommandes->sum(function ($ligne) {
             return $ligne->quantite * $ligne->prix_unitaire;
         });
 
-        $totalPaid = $this->getTotalPaidForOrder($commande);
-
-        return max(0, $totalDue - $totalPaid);
+        return max(0, $totalDue - $this->getTotalPaidForOrder($commande));
     }
 }

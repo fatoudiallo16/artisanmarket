@@ -10,7 +10,10 @@ use App\Policies\AnnoncePolicy;
 use App\Policies\CommandePolicy;
 use App\Policies\PaiementPolicy;
 use App\Policies\ProduitPolicy;
+use App\Services\CartService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,5 +35,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Commande::class, CommandePolicy::class);
         Gate::policy(Paiement::class, PaiementPolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
+
+        View::composer('layouts.app', function ($view): void {
+            $cartCount = 0;
+            $user = Auth::user();
+
+            if ($user && $user->hasRole('client')) {
+                $cartCount = app(CartService::class)->getCartCount($user->id);
+            }
+
+            $view->with('cartCount', $cartCount);
+        });
     }
 }

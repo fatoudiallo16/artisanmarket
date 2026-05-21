@@ -105,14 +105,28 @@ php artisan key:generate
 # DB_USERNAME=...
 # DB_PASSWORD=...
 
-# Base de données
+# Base de données (obligatoire — tout le catalogue vient de la DB)
 php artisan migrate
 php artisan db:seed
+
+# Réinitialiser et repeupler la DB (109 produits maliens inclus)
+php artisan migrate:fresh --seed
+
+# Ajouter uniquement le catalogue étendu (sans tout réinitialiser)
+php artisan db:seed --class=ProduitArtisanalMaliSeeder
 
 # Lancer le serveur de développement
 php artisan serve
 # Exemple : http://127.0.0.1:8000
 ```
+
+Les seeders `MarketplaceSeeder` et `ProduitArtisanalMaliSeeder` créent **109+ produits artisanaux maliens** (nom, description, prix FCFA, stock), **13 vendeurs**, **11 catégories** et des annonces en base.
+
+| Rôle | E-mail | Mot de passe |
+|------|--------|--------------|
+| Admin | `admin@artisanmarket.test` | `Admin@12345` |
+| Client | `client@artisanmarket.test` | `Client@12345` |
+| Vendeur | `aminata@artisanmarket.test` | `Vendeur@12345` |
 
 Pour un port personnalisé :
 
@@ -152,7 +166,7 @@ Le middleware `role:client`, `role:vendeur` ou `role:admin` protège les section
 2. **Ajouter au panier**  
 3. Ouvrir **Mon panier** (`/panier`) — ajuster quantités ou retirer des articles  
 4. **Passer la commande** → redirection vers les commandes  
-5. Consulter le détail et le **paiement** associé  
+5. **Payer** — le paiement est enregistré en base (`paiements`) avec numéro de facture et PDF téléchargeable  
 
 ---
 
