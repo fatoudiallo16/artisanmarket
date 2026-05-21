@@ -11,7 +11,7 @@
         </div>
 
         <div class="am-panel">
-            <form method="POST" action="{{ request()->routeIs('admin.*') ? route('admin.produits.store') : route('produits.store') }}" class="d-grid gap-3">
+            <form method="POST" action="{{ request()->routeIs('admin.*') ? route('admin.produits.store') : route('produits.store') }}" enctype="multipart/form-data" class="d-grid gap-3">
                 @csrf
                 <div class="am-form-grid">
                     <div class="am-field">
@@ -51,6 +51,7 @@
                     <label for="description">Description</label>
                     <textarea id="description" name="description">{{ old('description') }}</textarea>
                 </div>
+                @include('produits.partials.image-field')
                 <div>
                     <button class="btn am-btn-primary" type="submit">Publier le produit</button>
                     <a class="btn btn-link" href="{{ route('home') }}">Annuler</a>

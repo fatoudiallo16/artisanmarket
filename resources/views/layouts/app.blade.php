@@ -135,6 +135,18 @@
         document.querySelectorAll('[data-am-dismiss-notice]').forEach((btn) => {
             btn.addEventListener('click', () => btn.closest('.am-cart-notice')?.remove());
         });
+        document.querySelectorAll('[data-am-image-upload]').forEach((wrap) => {
+            const input = wrap.querySelector('[data-am-image-input]');
+            const preview = wrap.querySelector('[data-am-image-preview]');
+            const img = preview?.querySelector('img');
+            if (!input || !preview || !img) return;
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+                if (!file) return;
+                img.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            });
+        });
     </script>
 </body>
 </html>

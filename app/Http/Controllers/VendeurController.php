@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\Vendeur;
+use App\Services\BoutiqueImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,23 @@ use Illuminate\View\View;
 
 class VendeurController extends Controller
 {
+    public function __construct(
+        private readonly BoutiqueImageService $boutiqueImages,
+    ) {}
+
+    public function boutique(Vendeur $vendeur): View
+    {
+        abort_unless($vendeur->isActive(), 404);
+
+        $vendeur->load(['user.vendeurProfile', 'profile']);
+        $produits = $vendeur->produits()
+            ->with(['vendeur', 'categorie'])
+            ->latest()
+            ->paginate(12);
+
+        return view('boutiques.show', compact('vendeur', 'produits'));
+    }
+
     public function requestAccess(Request $request): JsonResponse|RedirectResponse
     {
         $user = Auth::user();
@@ -139,6 +157,8 @@ class VendeurController extends Controller
             'description_boutique' => ['nullable', 'string', 'max:2000'],
             'telephone' => ['nullable', 'string', 'max:40'],
             'adresse' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
+            'remove_image' => ['nullable', 'boolean'],
         ]);
 
         $vendeur = $user->vendeur;
@@ -151,7 +171,17 @@ class VendeurController extends Controller
             'name' => $user->name,
         ]);
 
-        $user->vendeurProfile()->updateOrCreate(['user_id' => $user->id], $data);
+        $profile = $user->vendeurProfile()->firstOrCreate(['user_id' => $user->id]);
+        $profileData = collect($data)->only(['nom_boutique', 'description_boutique', 'telephone', 'adresse'])->all();
+
+        if ($request->boolean('remove_image')) {
+            $this->boutiqueImages->delete($profile->image);
+            $profileData['image'] = null;
+        } elseif ($request->hasFile('image')) {
+            $profileData['image'] = $this->boutiqueImages->replace($profile, $request->file('image'));
+        }
+
+        $profile->update($profileData);
 
         return back()->with('success', 'Boutique mise a jour.');
     }

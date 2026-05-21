@@ -115,10 +115,15 @@ php artisan migrate:fresh --seed
 # Ajouter uniquement le catalogue étendu (sans tout réinitialiser)
 php artisan db:seed --class=ProduitArtisanalMaliSeeder
 
+# Lien symbolique pour les images vendeur (produits & boutiques)
+php artisan storage:link
+
 # Lancer le serveur de développement
 php artisan serve
 # Exemple : http://127.0.0.1:8000
 ```
+
+Les vendeurs peuvent téléverser une **photo par produit** et un **logo de boutique**. Fichiers stockés dans `storage/app/public/produits/vendeur_{id}/` et `storage/app/public/boutiques/user_{id}/`. Chaque produit reste lié à un `vendeur_id` ; la vitrine publique est accessible via `/boutiques/{id}`.
 
 Les seeders `MarketplaceSeeder` et `ProduitArtisanalMaliSeeder` créent **109+ produits artisanaux maliens** (nom, description, prix FCFA, stock), **13 vendeurs**, **11 catégories** et des annonces en base.
 

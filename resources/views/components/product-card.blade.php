@@ -4,11 +4,12 @@
     use App\Support\ProduitVisual;
 
     $theme = ProduitVisual::forProduit($produit);
-    $imageUrl = ProduitVisual::imageUrl($produit, $loopIndex);
+    $imageUrl = $produit->image_url ?? ProduitVisual::imageUrl($produit, $loopIndex);
     $categoryName = $produit->categorie?->nom ?? $produit->categorie?->nom_categorie ?? $theme['label'];
     $vendor = $produit->vendeur->nom_boutique ?? $produit->vendeur->name ?? 'Artisan';
     $inStock = (int) $produit->stock > 0;
     $isNew = $produit->created_at && $produit->created_at->gt(now()->subDays(14));
+    $boutiqueActive = $produit->vendeur && $produit->vendeur->isActive();
 @endphp
 
 <article class="am-product-card" data-category="{{ $theme['slug'] }}">
@@ -20,6 +21,9 @@
             @if(!$inStock)
                 <span class="am-badge am-badge-out">Rupture</span>
             @endif
+            @if($produit->image)
+                <span class="am-badge am-badge-upload" title="Photo du vendeur">Photo</span>
+            @endif
             <span class="am-product-category-pill">{{ ucfirst($categoryName) }}</span>
             <img src="{{ $imageUrl }}" alt="{{ $produit->nom }}" loading="lazy">
             <span class="am-product-hover-cta">Voir le produit</span>
@@ -28,7 +32,11 @@
     <div class="am-product-body">
         <div class="am-product-vendor">
             <span class="am-vendor-dot" aria-hidden="true"></span>
-            {{ $vendor }}
+            @if($boutiqueActive)
+                <a href="{{ route('boutiques.show', $produit->vendeur) }}">{{ $vendor }}</a>
+            @else
+                {{ $vendor }}
+            @endif
         </div>
         <h3 class="am-product-title">
             <a href="{{ route('produits.show', $produit) }}">{{ $produit->nom }}</a>

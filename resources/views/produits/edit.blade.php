@@ -10,7 +10,7 @@
         </div>
 
         <div class="am-panel">
-            <form method="POST" action="{{ request()->routeIs('admin.*') ? route('admin.produits.update', $produit) : route('produits.update', $produit) }}" class="d-grid gap-3">
+            <form method="POST" action="{{ request()->routeIs('admin.*') ? route('admin.produits.update', $produit) : route('produits.update', $produit) }}" enctype="multipart/form-data" class="d-grid gap-3">
                 @csrf
                 @method('PUT')
                 <div class="am-form-grid">
@@ -39,6 +39,8 @@
                     <label for="description">Description</label>
                     <textarea id="description" name="description">{{ old('description', $produit->description) }}</textarea>
                 </div>
+                @include('produits.partials.image-field', ['currentUrl' => $produit->image ? $produit->image_url : null])
+                <p class="text-muted small mb-0">Boutique : <strong>{{ $produit->vendeur->nom_boutique ?? '—' }}</strong></p>
                 <button class="btn am-btn-primary" type="submit">Enregistrer</button>
             </form>
         </div>

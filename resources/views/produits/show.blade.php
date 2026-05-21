@@ -4,7 +4,8 @@
     use App\Support\ProduitVisual;
 
     $theme = ProduitVisual::forProduit($produit);
-    $imageUrl = ProduitVisual::imageUrl($produit);
+    $imageUrl = $produit->image_url;
+    $profile = $produit->vendeur?->profile ?? $produit->vendeur?->user?->vendeurProfile;
     $categoryName = $produit->categorie?->nom ?? $produit->categorie?->nom_categorie ?? $theme['label'];
     $vendor = $produit->vendeur->nom_boutique ?? $produit->vendeur->name ?? 'Artisan';
     $inStock = (int) $produit->stock > 0;
@@ -37,8 +38,16 @@
                 <span class="am-product-detail-tag">{{ ucfirst($categoryName) }}</span>
                 <h1 class="am-product-detail-title">{{ $produit->nom }}</h1>
                 <p class="am-product-detail-vendor">
-                    Par <strong>{{ $vendor }}</strong>
+                    Par
+                    @if($produit->vendeur?->isActive())
+                        <a href="{{ route('boutiques.show', $produit->vendeur) }}"><strong>{{ $vendor }}</strong></a>
+                    @else
+                        <strong>{{ $vendor }}</strong>
+                    @endif
                 </p>
+                @if($profile?->adresse)
+                    <p class="text-muted small">{{ $profile->adresse }}</p>
+                @endif
 
                 <div class="am-product-price-block">
                     <span class="am-price am-price--xl">{{ number_format((float) $produit->prix, 0, ',', ' ') }} <small>FCFA</small></span>
@@ -127,6 +136,8 @@
                 </div>
             </div>
         </div>
+
+        @include('produits.partials.product-nav', ['previous' => $previous ?? null, 'next' => $next ?? null])
     </div>
 </section>
 

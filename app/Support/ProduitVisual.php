@@ -21,6 +21,22 @@ class ProduitVisual
 
     public static function imageUrl(Produit|int $produitOrId, ?int $loopIndex = null): string
     {
+        if ($produitOrId instanceof Produit) {
+            if ($produitOrId->image) {
+                return asset('storage/' . $produitOrId->image);
+            }
+
+            return self::fallbackImageUrl($produitOrId, $loopIndex);
+        }
+
+        $images = self::productImages();
+        $index = $loopIndex ?? $produitOrId;
+
+        return $images[$index % count($images)];
+    }
+
+    public static function fallbackImageUrl(Produit|int $produitOrId, ?int $loopIndex = null): string
+    {
         $images = self::productImages();
         $index = $loopIndex ?? (is_int($produitOrId) ? $produitOrId : $produitOrId->id);
 

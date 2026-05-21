@@ -11,6 +11,8 @@ Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->
 Route::resource('produits', App\Http\Controllers\ProduitController::class)
     ->only(['index', 'show'])
     ->names('produits');
+Route::get('boutiques/{vendeur}', [App\Http\Controllers\VendeurController::class, 'boutique'])
+    ->name('boutiques.show');
 
 Route::middleware(['auth', 'role:vendeur'])->group(function () {
     Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])

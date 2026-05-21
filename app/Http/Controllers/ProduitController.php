@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produit;
 use App\Models\Categorie;
+use App\Services\ProduitImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,10 @@ use Illuminate\View\View;
 
 class ProduitController extends Controller
 {
-    // afficher la liste des produits
+    public function __construct(
+        private readonly ProduitImageService $images,
+    ) {}
+
     public function index(Request $request): View
     {
         $query = Produit::with(['vendeur', 'categorie']);
@@ -34,6 +38,10 @@ class ProduitController extends Controller
             });
         }
 
+        if ($request->filled('boutique')) {
+            $query->where('vendeur_id', (int) $request->input('boutique'));
+        }
+
         match ($request->input('sort')) {
             'prix_asc' => $query->orderBy('prix'),
             'prix_desc' => $query->orderByDesc('prix'),
@@ -47,10 +55,9 @@ class ProduitController extends Controller
         return view('produits.index', compact('produits', 'categories', 'categoryColumn'));
     }
 
-    // aficher un produit en detail
     public function show(Produit $produit): View
     {
-        $produit->load(['vendeur', 'categorie']);
+        $produit->load(['vendeur.profile', 'categorie']);
 
         $related = Produit::with(['vendeur', 'categorie'])
             ->where('categorie_id', $produit->categorie_id)
@@ -59,7 +66,11 @@ class ProduitController extends Controller
             ->limit(4)
             ->get();
 
-        return view('produits.show', compact('produit', 'related'));
+        // Ordre catalogue = plus récent en premier (latest)
+        $previous = Produit::where('id', '>', $produit->id)->orderBy('id')->first();
+        $next = Produit::where('id', '<', $produit->id)->orderByDesc('id')->first();
+
+        return view('produits.show', compact('produit', 'related', 'previous', 'next'));
     }
 
     public function create(): View
@@ -83,12 +94,21 @@ class ProduitController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'categorie_id' => ['required', 'exists:categories,id'],
             'vendeur_id' => ['nullable', 'exists:vendeurs,id'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
         ]);
 
-        $data['vendeur_id'] = $this->resolveVendeurId($request);
-        Produit::create($data);
+        $vendeurId = $this->resolveVendeurId($request);
+        $data['vendeur_id'] = $vendeurId;
 
-        return redirect()->route(Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home')->with('success', 'Produit cree avec succes.');
+        if ($request->hasFile('image')) {
+            $data['image'] = $this->images->store($request->file('image'), $vendeurId);
+        }
+
+        $produit = Produit::create($data);
+
+        return redirect()
+            ->route('produits.show', $produit)
+            ->with('success', 'Produit créé avec succès.');
     }
 
     public function edit(Produit $produit): View
@@ -111,20 +131,31 @@ class ProduitController extends Controller
             'prix' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'categorie_id' => ['required', 'exists:categories,id'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
+            'remove_image' => ['nullable', 'boolean'],
         ]);
 
+        if ($request->boolean('remove_image')) {
+            $this->images->delete($produit->image);
+            $data['image'] = null;
+        } elseif ($request->hasFile('image')) {
+            $data['image'] = $this->images->replace($produit, $request->file('image'));
+        }
+
+        unset($data['remove_image']);
         $produit->update($data);
 
-        return redirect()->route('produits.show', $produit)->with('success', 'Produit mis a jour.');
+        return redirect()->route('produits.show', $produit)->with('success', 'Produit mis à jour.');
     }
 
     public function destroy(Produit $produit): RedirectResponse
     {
         $this->authorize('delete', $produit);
 
+        $this->images->delete($produit->image);
         $produit->delete();
 
-        return redirect()->route('produits.index')->with('success', 'Produit supprime.');
+        return redirect()->route('produits.index')->with('success', 'Produit supprimé.');
     }
 
     private function resolveVendeurId(Request $request): int
@@ -139,6 +170,6 @@ class ProduitController extends Controller
             return (int) $user->vendeur->id;
         }
 
-        abort(403, 'Aucun profil vendeur associe a ce compte.');
+        abort(403, 'Aucun profil vendeur associé à ce compte.');
     }
 }

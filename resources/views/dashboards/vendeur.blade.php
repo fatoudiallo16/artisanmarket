@@ -23,9 +23,23 @@
             <div class="col-lg-5">
                 <div class="am-panel">
                     <h2 class="h3 fw-bold mb-3">Ma boutique</h2>
-                    <form method="POST" action="{{ route('vendeur.boutique.update') }}" class="d-grid gap-3">
+                    <form method="POST" action="{{ route('vendeur.boutique.update') }}" enctype="multipart/form-data" class="d-grid gap-3">
                         @csrf
                         @method('PATCH')
+                        @if($profile?->image_url)
+                            <div class="am-boutique-logo am-boutique-logo--sm mb-2">
+                                <img src="{{ $profile->image_url }}" alt="Logo boutique">
+                            </div>
+                        @endif
+                        <div class="am-field">
+                            <label for="boutique_image">Logo / photo de la boutique</label>
+                            <input id="boutique_image" name="image" type="file" accept="image/jpeg,image/png,image/webp">
+                            @if($profile?->image)
+                                <label class="d-block mt-2 small">
+                                    <input type="checkbox" name="remove_image" value="1"> Supprimer le logo
+                                </label>
+                            @endif
+                        </div>
                         <div class="am-field">
                             <label for="nom_boutique">Nom</label>
                             <input id="nom_boutique" name="nom_boutique" value="{{ old('nom_boutique', $profile->nom_boutique ?? $vendeur->nom_boutique ?? '') }}" required>
@@ -43,6 +57,9 @@
                             <input id="adresse" name="adresse" value="{{ old('adresse', $profile->adresse ?? '') }}">
                         </div>
                         <button class="btn am-btn-primary" type="submit">Mettre a jour</button>
+                        @if($vendeur?->isActive())
+                            <a class="btn am-btn-ghost d-block mt-2 text-center" href="{{ route('boutiques.show', $vendeur) }}" target="_blank" rel="noopener">Voir ma boutique publique</a>
+                        @endif
                     </form>
                 </div>
             </div>
