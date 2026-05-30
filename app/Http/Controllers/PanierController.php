@@ -23,7 +23,15 @@ class PanierController extends Controller
         $articles = $this->cartService->getCartItems(Auth::id());
         $total = $this->cartService->calculateCartTotal(Auth::id());
 
-        return view('panier.index', ['articles' => $articles, 'total' => $total]);
+        return view('public.panier.index', ['articles' => $articles, 'total' => $total]);
+    }
+
+    public function commande(): View
+    {
+        $articles = $this->cartService->getCartItems(Auth::id());
+        $total = $this->cartService->calculateCartTotal(Auth::id());
+
+        return view('public.commande.index', ['articles' => $articles, 'total' => $total]);
     }
 
     // ajouter un produit au panier

@@ -3,6 +3,10 @@
 @section('title', 'Mes paiements - Artisan Market')
 
 @section('content')
+@php
+    $paiementRoutePrefix = request()->routeIs('admin.*') ? 'admin.paiements.' : 'paiements.';
+    $commandeRoutePrefix = request()->routeIs('admin.*') ? 'admin.commandes.' : 'commandes.';
+@endphp
 <section class="am-page-head">
     <div class="container am-container">
         <h1 class="am-page-title">Mes paiements</h1>
@@ -15,7 +19,7 @@
         @if($paiements->isEmpty())
             <div class="am-panel text-center py-5">
                 <p class="text-muted mb-4">Aucun paiement enregistré.</p>
-                <a class="btn am-btn-primary" href="{{ route('commandes.index') }}">Voir mes commandes</a>
+                <a class="btn am-btn-primary" href="{{ route($commandeRoutePrefix . 'index') }}">Voir mes commandes</a>
             </div>
         @else
             <div class="am-panel">
@@ -42,7 +46,7 @@
                                         <span class="badge text-bg-secondary">{{ ucfirst(str_replace('_', ' ', $paiement->statut)) }}</span>
                                     </td>
                                     <td>
-                                        @if($paiement->statut === 'paye' && $paiement->numero_facture)
+                                        @if($paiement->statut === 'paye' && $paiement->numero_facture && !request()->routeIs('admin.*'))
                                             <a href="{{ route('paiements.invoice', $paiement) }}">{{ $paiement->numero_facture }}</a>
                                         @else
                                             —
@@ -50,7 +54,7 @@
                                     </td>
                                     <td>{{ $paiement->created_at?->format('d/m/Y H:i') }}</td>
                                     <td class="text-end">
-                                        <a class="btn btn-sm am-btn-primary" href="{{ route('paiements.show', $paiement) }}">Détails</a>
+                                        <a class="btn btn-sm am-btn-primary" href="{{ route($paiementRoutePrefix . 'show', $paiement) }}">Détails</a>
                                     </td>
                                 </tr>
                             @endforeach

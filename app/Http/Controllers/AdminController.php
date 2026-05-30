@@ -8,6 +8,7 @@ use App\Models\Paiement;
 use App\Models\Produit;
 use App\Models\User;
 use App\Models\Vendeur;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -38,7 +39,7 @@ class AdminController extends Controller
 
         $recent_annonces = Annonce::with('user')->latest()->limit(5)->get();
 
-        return view('dashboards.admin', [
+        return view('admin.dashboards.index', [
             'stats' => [
                 'users' => $stats['total_users'],
                 'vendeurs' => $stats['total_vendeurs'],
@@ -57,7 +58,7 @@ class AdminController extends Controller
     /**
      * Afficher les statistiques détaillées
      */
-    public function statistics(): View
+    public function statistics(): RedirectResponse
     {
         $stats = [
             'users_by_role' => User::selectRaw('role_id, count(*) as count')
@@ -75,14 +76,14 @@ class AdminController extends Controller
                 ->get(),
         ];
 
-        return view('admin.statistics', compact('stats'));
+        return redirect()->route('admin.dashboard');
     }
 
     /**
      * Afficher la page de gestion des rôles et permissions
      */
-    public function settings(): View
+    public function settings(): RedirectResponse
     {
-        return view('admin.settings');
+        return redirect()->route('admin.dashboard');
     }
 }

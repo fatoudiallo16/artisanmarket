@@ -1,5 +1,18 @@
 @import 'tailwindcss';
 
+@import './base/variables.css';
+@import './base/typography.css';
+@import './base/animation.css';
+
+@import './composant/navbar.css';
+@import './composant/carte.css';
+@import './composant/bouton.css';
+@import './composant/footer.css';
+
+@import './pages/accueil.css';
+@import './pages/produit.css';
+@import './pages/panier.css';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';

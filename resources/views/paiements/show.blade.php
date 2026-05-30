@@ -5,10 +5,12 @@
 @section('content')
 @php
     $commande = $paiement->commande;
+    $paiementRoutePrefix = request()->routeIs('admin.*') ? 'admin.paiements.' : 'paiements.';
+    $commandeRoutePrefix = request()->routeIs('admin.*') ? 'admin.commandes.' : 'commandes.';
 @endphp
 <section class="am-page-head">
     <div class="container am-container">
-        <a class="fw-bold text-danger" href="{{ route('paiements.index') }}"><- Mes paiements</a>
+        <a class="fw-bold text-danger" href="{{ route($paiementRoutePrefix . 'index') }}"><- Mes paiements</a>
         <h1 class="am-page-title mt-2">Paiement #{{ $paiement->id }}</h1>
         <p class="am-page-lead">
             Commande #{{ $paiement->commande_id }} ·
@@ -31,7 +33,7 @@
                     <p class="mb-1"><strong>Date :</strong> {{ $paiement->date_paiement?->format('d/m/Y H:i') ?? $paiement->created_at?->format('d/m/Y H:i') }}</p>
                     <p class="mb-0">
                         <strong>Commande :</strong>
-                        <a href="{{ route('commandes.show', $commande) }}">#{{ $commande->id }}</a>
+                        <a href="{{ route($commandeRoutePrefix . 'show', $commande) }}">#{{ $commande->id }}</a>
                         ({{ ucfirst(str_replace('_', ' ', $commande->statut)) }})
                     </p>
                 </div>
@@ -57,7 +59,7 @@
                         <p class="text-muted small mb-0">Le paiement et la facture PDF seront enregistrés en base de données.</p>
                     @elseif($paiement->statut === 'paye')
                         <p class="text-success mb-3">Paiement enregistré. Merci pour votre achat.</p>
-                        @if($paiement->facture_pdf || $paiement->numero_facture)
+                        @if(($paiement->facture_pdf || $paiement->numero_facture) && !request()->routeIs('admin.*'))
                             <a class="btn am-btn-primary w-100 mb-2" href="{{ route('paiements.invoice', $paiement) }}">
                                 Télécharger la facture PDF
                             </a>

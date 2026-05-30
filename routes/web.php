@@ -3,6 +3,20 @@
 use App\Http\Controllers\AnnonceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CategorieController;
+
+
+Route::get('/home', function () {
+    return view('home');
+})->name('home');
+
+
+
+Route::resource('categories', CategorieController::class);
+
+Route::get('/client/dashboard', function () {
+    return view('client.dashboard');
+})->middleware('auth');
 
 Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
 
@@ -16,6 +30,7 @@ Route::resource('produits', App\Http\Controllers\ProduitController::class)
     ->names('produits');
 Route::get('boutiques/{vendeur}', [App\Http\Controllers\VendeurController::class, 'boutique'])
     ->name('boutiques.show');
+Route::view('favoris', 'public.favoris.index')->name('favoris.index');
 
 Route::middleware(['auth', 'role:vendeur,admin'])->group(function () {
     Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])
@@ -31,6 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::post('devenir-vendeur', [App\Http\Controllers\VendeurController::class, 'requestAccess'])
             ->name('vendeur.request');
         Route::get('panier', [App\Http\Controllers\PanierController::class, 'index'])->name('panier.index');
+        Route::get('commande', [App\Http\Controllers\PanierController::class, 'commande'])->name('commande.index');
         Route::post('panier', [App\Http\Controllers\PanierController::class, 'store'])->name('panier.store');
         Route::patch('panier/{produit}', [App\Http\Controllers\PanierController::class, 'update'])->name('panier.update');
         Route::delete('panier/{produit}', [App\Http\Controllers\PanierController::class, 'destroy'])->name('panier.destroy');
@@ -57,7 +73,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', App\Http\Controllers\RoleController::class)
             ->except(['create', 'edit']);
         Route::resource('categories', App\Http\Controllers\CategorieController::class)
-            ->except(['create', 'edit']);
+            ->except(['create', 'edit'])
+            ->parameters(['categories' => 'categorie']);
         Route::resource('vendeurs', App\Http\Controllers\VendeurController::class)
             ->only(['index', 'show', 'update', 'destroy']);
         Route::resource('produits', App\Http\Controllers\ProduitController::class)->except(['index', 'show']);

@@ -18,18 +18,18 @@ class WelcomeController extends Controller
             ->with(['vendeur', 'categorie'])
             ->where('stock', '>', 0)
             ->latest()
-            ->limit(6)
+            ->limit(10)
             ->get();
 
         $categories = Categorie::query()
             ->withCount('produits')
             ->orderByDesc('produits_count')
-            ->limit(6)
+            ->limit(7)
             ->get();
 
         $latestAnnonce = Annonce::query()->latest()->first();
 
-        return view('index', compact(
+        return view('public.accueil.welcome', compact(
             'produitsEnVedette',
             'categories',
             'categoryColumn',

@@ -27,7 +27,7 @@ class VendeurController extends Controller
             ->latest()
             ->paginate(12);
 
-        return view('boutiques.show', compact('vendeur', 'produits'));
+        return view('public.boutiques.show', compact('vendeur', 'produits'));
     }
 
     public function requestAccess(Request $request): JsonResponse|RedirectResponse
@@ -92,18 +92,18 @@ class VendeurController extends Controller
         $vendeurs = Vendeur::with('user')->latest()->paginate(20);
 
         if (!$request->expectsJson()) {
-            return view('vendeurs.index', compact('vendeurs'));
+            return view('admin.vendeurs.index', compact('vendeurs'));
         }
 
         return response()->json($vendeurs);
     }
 
-    public function show(Request $request, Vendeur $vendeur): JsonResponse|View
+    public function show(Request $request, Vendeur $vendeur): JsonResponse|RedirectResponse
     {
         $vendeur->load('user.vendeurProfile', 'produits.categorie');
 
         if (!$request->expectsJson()) {
-            return view('vendeurs.show', compact('vendeur'));
+            return redirect()->route('admin.vendeurs.index');
         }
 
         return response()->json($vendeur);

@@ -33,7 +33,7 @@ class HomeController extends Controller
         $user->loadMissing('role', 'vendeur', 'vendeurProfile');
 
         if ($user->hasRole('admin')) {
-            return view('dashboards.admin', [
+            return view('admin.dashboards.index', [
                 'stats' => [
                     'users' => User::count(),
                     'vendeurs' => Vendeur::count(),
@@ -50,17 +50,13 @@ class HomeController extends Controller
         if ($user->hasRole('vendeur')) {
             $vendeur = $user->vendeur;
 
-            return view('dashboards.vendeur', [
+            return view('vendeur.dashboard.index', [
                 'vendeur' => $vendeur,
                 'produits' => $vendeur ? $vendeur->produits()->with('categorie')->latest()->get() : collect(),
                 'categoriesCount' => $vendeur ? $vendeur->produits()->distinct('categorie_id')->count('categorie_id') : 0,
             ]);
         }
 
-        return view('dashboards.client', [
-            'demande' => $user->vendeur,
-            'produits' => Produit::with(['vendeur', 'categorie'])->latest()->limit(6)->get(),
-            'annonces' => Annonce::latest()->limit(3)->get(),
-        ]);
+        return redirect()->route('welcome');
     }
 }

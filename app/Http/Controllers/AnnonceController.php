@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 use App\Models\Annonce;
 use App\Services\AnnonceService;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,18 +15,16 @@ class AnnonceController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        $annonces = $this->annonceService->getPaginated(10);
-
-        return view('annonces.index', compact('annonces'));
+        return redirect()->route('welcome');
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
         $this->authorize('create', Annonce::class);
 
-        return view('annonces.create');
+        return redirect()->route('admin.dashboard');
     }
 
     public function store(Request $request): RedirectResponse
@@ -45,15 +42,15 @@ class AnnonceController extends Controller
         return redirect()->route('annonces.index')->with('success', 'Annonce publiée avec succès.');
     }
 
-    public function show(Annonce $annonce): View
+    public function show(Annonce $annonce): RedirectResponse
     {
-        return view('annonces.show', compact('annonce'));
+        return redirect()->route('welcome');
     }
 
-    public function edit(Annonce $annonce): View
+    public function edit(Annonce $annonce): RedirectResponse
     {
         $this->authorize('update', $annonce);
-        return view('annonces.edit', compact('annonce'));
+        return redirect()->route('admin.dashboard');
     }
 
     public function update(Request $request, Annonce $annonce): RedirectResponse

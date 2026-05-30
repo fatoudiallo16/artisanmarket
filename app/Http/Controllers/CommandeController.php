@@ -30,14 +30,14 @@ class CommandeController extends Controller
 
         $commandes = $query->paginate(15);
 
-        return view('commandes.index', compact('commandes'));
+        return view('client.commandes.index', compact('commandes'));
     }
 
     public function show(Commande $commande): View
     {
         $this->authorize('view', $commande);
 
-        return view('commandes.show', compact('commande'));
+        return view('client.commandes.show', compact('commande'));
     }
 
     public function store(Request $request): RedirectResponse

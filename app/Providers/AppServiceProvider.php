@@ -33,8 +33,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
-        Paginator::defaultView('vendor.pagination.artisan-market');
-        Paginator::defaultSimpleView('vendor.pagination.artisan-market-simple');
 
         Gate::policy(Annonce::class, AnnoncePolicy::class);
         Gate::policy(Commande::class, CommandePolicy::class);

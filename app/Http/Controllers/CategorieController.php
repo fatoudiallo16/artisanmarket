@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Categorie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CategorieController extends Controller
@@ -32,38 +33,62 @@ class CategorieController extends Controller
     /**
      * Créer une nouvelle catégorie
      */
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'nom_categorie' => ['required', 'string', 'max:255', 'unique:categories,nom_categorie'],
-            'description' => ['nullable', 'string'],
-        ]);
+    public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|max:255',
+        'image' => 'nullable|image'
+    ]);
 
-        $categorie = Categorie::create($data);
+    $imagePath = null;
 
-        return response()->json([
-            'message' => 'Catégorie créée avec succès.',
-            'categorie' => $categorie,
-        ], 201);
+    if ($request->hasFile('image')) {
+
+        $imagePath = $request
+            ->file('image')
+            ->store('categories', 'public');
     }
+    
+
+    Categorie::create([
+        'name' => $request->name,
+        'slug' => Str::slug($request->name),
+        'description' => $request->description,
+        'image' => $imagePath,
+        'status' => true
+    ]);
+
+    return redirect()
+        ->route('categories.index')
+        ->with('success', 'Catégorie créée.');
+}
 
     /**
      * Mettre à jour une catégorie
      */
-    public function update(Request $request, Categorie $categorie): JsonResponse
-    {
-        $data = $request->validate([
-            'nom_categorie' => ['required', 'string', 'max:255', 'unique:categories,nom_categorie,'.$categorie->id],
-            'description' => ['nullable', 'string'],
-        ]);
+    public function update(Request $request, Categorie $categorie)
+{
+    $data = $request->validate([
+        'name' => 'required|max:255',
+        'description' => 'nullable',
+        'image' => 'nullable|image'
+    ]);
 
-        $categorie->update($data);
+    if ($request->hasFile('image')) {
 
-        return response()->json([
-            'message' => 'Catégorie mise à jour.',
-            'categorie' => $categorie->fresh(),
-        ]);
+        $data['image'] = $request
+            ->file('image')
+            ->store('categories', 'public');
     }
+
+    $data['status'] = $request->has('status');
+
+    $categorie->update($data);
+
+    return redirect()
+        ->route('categories.index')
+        ->with('success', 'Catégorie mise à jour.');
+}
 
     /**
      * Supprimer une catégorie
@@ -76,4 +101,12 @@ class CategorieController extends Controller
             'message' => 'Catégorie supprimée.',
         ]);
     }
+    public function create()
+   {
+    return view('admin.categories.create');
+    }
+    public function edit(Categorie $categorie)
+{
+    return view('admin.categories.edit', compact('categorie'));
+}
 }

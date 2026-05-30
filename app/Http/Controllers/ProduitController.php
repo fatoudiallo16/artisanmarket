@@ -42,6 +42,14 @@ class ProduitController extends Controller
             $query->where('vendeur_id', (int) $request->input('boutique'));
         }
 
+        if ($request->filled('min_price')) {
+            $query->where('prix', '>=', (float) $request->input('min_price'));
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('prix', '<=', (float) $request->input('max_price'));
+        }
+
         match ($request->input('sort')) {
             'prix_asc' => $query->orderBy('prix'),
             'prix_desc' => $query->orderByDesc('prix'),
@@ -52,7 +60,7 @@ class ProduitController extends Controller
         $produits = $query->paginate(12)->withQueryString();
         $categories = Categorie::withCount('produits')->get();
 
-        return view('produits.index', compact('produits', 'categories', 'categoryColumn'));
+        return view('public.produits.index', compact('produits', 'categories', 'categoryColumn'));
     }
 
     public function show(Produit $produit): View
@@ -70,7 +78,7 @@ class ProduitController extends Controller
         $previous = Produit::where('id', '>', $produit->id)->orderBy('id')->first();
         $next = Produit::where('id', '<', $produit->id)->orderByDesc('id')->first();
 
-        return view('produits.show', compact('produit', 'related', 'previous', 'next'));
+        return view('public.produits.show', compact('produit', 'related', 'previous', 'next'));
     }
 
     public function create(): View
@@ -78,7 +86,7 @@ class ProduitController extends Controller
         $this->authorize('create', Produit::class);
         $this->ensureCanManageProducts();
 
-        return view('produits.create', [
+        return view('public.produits.create', [
             'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
             'vendeurs' => Auth::user()->hasRole('admin') ? \App\Models\Vendeur::where('statut', 'approuve')->orderBy('nom_boutique')->get() : collect(),
         ]);
@@ -119,7 +127,7 @@ class ProduitController extends Controller
     {
         $this->authorize('update', $produit);
 
-        return view('produits.edit', [
+        return view('public.produits.edit', [
             'produit' => $produit,
             'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
         ]);
