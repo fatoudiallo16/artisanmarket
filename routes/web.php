@@ -1,45 +1,25 @@
 <?php
 
 use App\Http\Controllers\AnnonceController;
-use App\Http\Controllers\PanierController;
-use App\Http\Controllers\ProduitController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('pages.home');
-    
-});
+Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
 
+Auth::routes();
 
-// routes/web.php
-
-Route::get('/produits', function () {
-    return view('produits.index');
-});
-Route::middleware(['auth'])->group(function () {
-
-    Route::resource(
-        'seller/products',
-        ProduitController::class
-    );
-
-});
-
-Route::post('/Panier/add', [PanierController::class, 'add']);
-Route::get('/Panier', [PanierController::class, 'index']);
-Route::post('/Panier/update', [PanierController::class, 'update']);
-Route::post('/Panier/remove', [PanierController::class, 'remove']);
-
-Auth::routes();     
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
 Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->names('annonces');
 Route::resource('produits', App\Http\Controllers\ProduitController::class)
     ->only(['index', 'show'])
     ->names('produits');
+Route::get('boutiques/{vendeur}', [App\Http\Controllers\VendeurController::class, 'boutique'])
+    ->name('boutiques.show');
 
-Route::middleware(['auth', 'role:vendeur'])->group(function () {
+Route::middleware(['auth', 'role:vendeur,admin'])->group(function () {
     Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])
+        ->middleware('role:vendeur')
         ->name('vendeur.boutique.update');
     Route::resource('produits', App\Http\Controllers\ProduitController::class)
         ->except(['index', 'show'])
@@ -56,6 +36,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('panier/{produit}', [App\Http\Controllers\PanierController::class, 'destroy'])->name('panier.destroy');
         Route::delete('panier', [App\Http\Controllers\PanierController::class, 'clear'])->name('panier.clear');
         Route::post('panier/checkout', [App\Http\Controllers\PanierController::class, 'checkout'])->name('panier.checkout');
+        Route::post('paiements/{paiement}/pay', [App\Http\Controllers\PaiementController::class, 'pay'])
+            ->name('paiements.pay');
+        Route::get('paiements/{paiement}/facture', [App\Http\Controllers\PaiementController::class, 'invoice'])
+            ->name('paiements.invoice');
         Route::resource('paiements', App\Http\Controllers\PaiementController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy'])
             ->names('paiements');
@@ -82,6 +66,5 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::resource('commandes', App\Http\Controllers\CommandeController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy']);
-     });
+    });
 });
-

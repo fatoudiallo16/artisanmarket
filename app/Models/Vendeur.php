@@ -17,4 +17,14 @@ class Vendeur extends Model
     {
         return $this->hasMany(Produit::class, 'vendeur_id');
     }
+
+    public function profile()
+    {
+        return $this->hasOne(VendeurProfile::class, 'user_id', 'user_id');
+    }
+
+    public function isActive(): bool
+    {
+        return $this->statut === 'approuve';
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Lignecommande;
 use App\Models\Vendeur;
 use App\Models\Role;
 use App\Models\User;
@@ -55,11 +56,18 @@ class VendeurService
      */
     public function getVendeurStats(Vendeur $vendeur): array
     {
+        $produitIds = $vendeur->produits()->pluck('id');
+
+        $totalVentes = (int) Lignecommande::query()
+            ->whereIn('produit_id', $produitIds)
+            ->whereHas('commande', fn ($q) => $q->whereIn('statut', ['payee', 'en_cours']))
+            ->sum('quantite');
+
         return [
             'total_produits' => $vendeur->produits()->count(),
-            'total_ventes' => $vendeur->produits()->sum('stock'),
+            'total_ventes' => $totalVentes,
             'produits_actifs' => $vendeur->produits()->where('stock', '>', 0)->count(),
-            'note_moyenne' => 0, // TODO: implémenter système de notation
+            'note_moyenne' => 0,
         ];
     }
 }

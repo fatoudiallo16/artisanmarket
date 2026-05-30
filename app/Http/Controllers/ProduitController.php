@@ -4,69 +4,79 @@ namespace App\Http\Controllers;
 
 use App\Models\Produit;
 use App\Models\Categorie;
+use App\Services\ProduitImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
-use Throwable;
 
 class ProduitController extends Controller
 {
-    // afficher la liste des produits
+    public function __construct(
+        private readonly ProduitImageService $images,
+    ) {}
+
     public function index(Request $request): View
     {
-        try {
-            $query = Produit::with(['vendeur', 'categorie']);
+        $query = Produit::with(['vendeur', 'categorie']);
 
-            if ($request->filled('q')) {
-                $search = $request->string('q')->toString();
-                $query->where(function ($builder) use ($search) {
-                    $builder->where('nom', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
-
-            $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
-
-            if ($request->filled('categorie')) {
-                $category = $request->string('categorie')->lower()->toString();
-                $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
-                    $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
-                });
-            }
-
-            match ($request->input('sort')) {
-                'prix_asc' => $query->orderBy('prix'),
-                'prix_desc' => $query->orderByDesc('prix'),
-                'nouveautes' => $query->latest(),
-                default => $query->latest(),
-            };
-
-            $produits = $query->paginate(12)->withQueryString();
-            $categories = Categorie::withCount('produits')->get();
-        } catch (Throwable) {
-            $categoryColumn = 'nom';
-            $categories = collect();
-            $produits = new LengthAwarePaginator(collect(), 0, 12, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
+        if ($request->filled('q')) {
+            $search = $request->string('q')->toString();
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nom', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
+
+        $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+
+        if ($request->filled('categorie')) {
+            $category = $request->string('categorie')->lower()->toString();
+            $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
+                $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
+            });
+        }
+
+        if ($request->filled('boutique')) {
+            $query->where('vendeur_id', (int) $request->input('boutique'));
+        }
+
+        match ($request->input('sort')) {
+            'prix_asc' => $query->orderBy('prix'),
+            'prix_desc' => $query->orderByDesc('prix'),
+            'nouveautes' => $query->latest(),
+            default => $query->latest(),
+        };
+
+        $produits = $query->paginate(12)->withQueryString();
+        $categories = Categorie::withCount('produits')->get();
 
         return view('produits.index', compact('produits', 'categories', 'categoryColumn'));
     }
 
-    // aficher un produit en detail
     public function show(Produit $produit): View
     {
-        return view('produits.show', compact('produit'));
+        $produit->load(['vendeur.profile', 'categorie']);
+
+        $related = Produit::with(['vendeur', 'categorie'])
+            ->where('categorie_id', $produit->categorie_id)
+            ->where('id', '!=', $produit->id)
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
+        // Ordre catalogue = plus récent en premier (latest)
+        $previous = Produit::where('id', '>', $produit->id)->orderBy('id')->first();
+        $next = Produit::where('id', '<', $produit->id)->orderByDesc('id')->first();
+
+        return view('produits.show', compact('produit', 'related', 'previous', 'next'));
     }
 
     public function create(): View
     {
         $this->authorize('create', Produit::class);
+        $this->ensureCanManageProducts();
 
         return view('produits.create', [
             'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
@@ -77,6 +87,7 @@ class ProduitController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Produit::class);
+        $this->ensureCanManageProducts();
 
         $data = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
@@ -85,12 +96,23 @@ class ProduitController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'categorie_id' => ['required', 'exists:categories,id'],
             'vendeur_id' => ['nullable', 'exists:vendeurs,id'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
         ]);
 
-        $data['vendeur_id'] = $this->resolveVendeurId($request);
-        Produit::create($data);
+        $vendeurId = $this->resolveVendeurId($request);
+        $data['vendeur_id'] = $vendeurId;
 
-        return redirect()->route(Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home')->with('success', 'Produit cree avec succes.');
+        if ($request->hasFile('image')) {
+            $data['image'] = $this->images->store($request->file('image'), $vendeurId);
+        }
+
+        $produit = Produit::create($data);
+
+        $redirectRoute = Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home';
+
+        return redirect()
+            ->route($redirectRoute)
+            ->with('success', 'Produit créé avec succès.');
     }
 
     public function edit(Produit $produit): View
@@ -113,20 +135,31 @@ class ProduitController extends Controller
             'prix' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'categorie_id' => ['required', 'exists:categories,id'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'],
+            'remove_image' => ['nullable', 'boolean'],
         ]);
 
+        if ($request->boolean('remove_image')) {
+            $this->images->delete($produit->image);
+            $data['image'] = null;
+        } elseif ($request->hasFile('image')) {
+            $data['image'] = $this->images->replace($produit, $request->file('image'));
+        }
+
+        unset($data['remove_image']);
         $produit->update($data);
 
-        return redirect()->route('produits.show', $produit)->with('success', 'Produit mis a jour.');
+        return redirect()->route('produits.show', $produit)->with('success', 'Produit mis à jour.');
     }
 
     public function destroy(Produit $produit): RedirectResponse
     {
         $this->authorize('delete', $produit);
 
+        $this->images->delete($produit->image);
         $produit->delete();
 
-        return redirect()->route('produits.index')->with('success', 'Produit supprime.');
+        return redirect()->route('produits.index')->with('success', 'Produit supprimé.');
     }
 
     private function resolveVendeurId(Request $request): int
@@ -141,6 +174,29 @@ class ProduitController extends Controller
             return (int) $user->vendeur->id;
         }
 
-        abort(403, 'Aucun profil vendeur associe a ce compte.');
+        abort(403, 'Aucun profil vendeur associé à ce compte.');
+    }
+
+    private function ensureCanManageProducts(): void
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin')) {
+            return;
+        }
+
+        if (!$user->hasRole('vendeur')) {
+            abort(403, 'Seuls les vendeurs et administrateurs peuvent gérer des produits.');
+        }
+
+        $vendeur = $user->vendeur;
+
+        if (!$vendeur) {
+            abort(403, 'Aucune boutique associée à votre compte. Contactez l\'administrateur.');
+        }
+
+        if (!$vendeur->isActive()) {
+            abort(403, 'Votre boutique doit être approuvée par un administrateur avant d\'ajouter des produits.');
+        }
     }
 }

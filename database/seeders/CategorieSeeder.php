@@ -15,7 +15,11 @@ class CategorieSeeder extends Seeder
     {
         $column = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
 
-        foreach (['tissus', 'pot en terre cuite', 'bijoux'] as $name) {
+        foreach ([
+            'bijoux', 'tissus', 'poterie', 'pot en terre cuite',
+            'sculpture bois', 'cuir', 'instruments', 'maroquinerie',
+            'art mural', 'vannerie', 'cosmetiques',
+        ] as $name) {
             Categorie::firstOrCreate([$column => $name]);
         }
     }

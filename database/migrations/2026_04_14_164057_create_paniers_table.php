@@ -14,9 +14,6 @@ return new class extends Migration
         Schema::create('paniers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->integer('quantite');
-            $table->decimal('prix_unitaire', 8, 2);
-            $table->foreignId('produit_id')->constrained('produits')->onDelete('cascade');
             $table->timestamps();
         });
     }

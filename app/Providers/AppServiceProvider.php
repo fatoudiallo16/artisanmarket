@@ -10,7 +10,11 @@ use App\Policies\AnnoncePolicy;
 use App\Policies\CommandePolicy;
 use App\Policies\PaiementPolicy;
 use App\Policies\ProduitPolicy;
+use App\Services\CartService;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,9 +32,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+        Paginator::defaultView('vendor.pagination.artisan-market');
+        Paginator::defaultSimpleView('vendor.pagination.artisan-market-simple');
+
         Gate::policy(Annonce::class, AnnoncePolicy::class);
         Gate::policy(Commande::class, CommandePolicy::class);
         Gate::policy(Paiement::class, PaiementPolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
+
+        View::composer('layouts.app', function ($view): void {
+            $cartCount = 0;
+            $user = Auth::user();
+
+            if ($user && $user->hasRole('client')) {
+                $cartCount = app(CartService::class)->getCartCount($user->id);
+            }
+
+            $view->with('cartCount', $cartCount);
+        });
     }
 }

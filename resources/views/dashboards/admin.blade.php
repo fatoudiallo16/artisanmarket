@@ -15,7 +15,12 @@
             <div class="am-stat-card"><span>Utilisateurs</span><strong>{{ $stats['users'] ?? 0 }}</strong></div>
             <div class="am-stat-card"><span>Vendeurs</span><strong>{{ $stats['vendeurs'] ?? 0 }}</strong></div>
             <div class="am-stat-card"><span>Demandes</span><strong>{{ $stats['demandes'] ?? 0 }}</strong></div>
-            <div class="am-stat-card"><span>Annonces</span><strong>{{ $stats['annonces'] ?? 0 }}</strong></div>
+            <div class="am-stat-card"><span>Produits</span><strong>{{ $stats['produits'] ?? 0 }}</strong></div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a class="btn am-btn-primary" href="{{ route('admin.produits.create') }}">Ajouter un produit</a>
+            <a class="btn am-btn-ghost" href="{{ route('produits.index') }}">Voir le catalogue</a>
         </div>
 
         <div class="row g-4">

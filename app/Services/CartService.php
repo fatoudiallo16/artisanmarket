@@ -27,17 +27,18 @@ class CartService
         $panier = $this->getOrCreateCart($userId);
         $produit = Produit::findOrFail($produitId);
 
-        // Vérifier le stock
-        if ($produit->stock < $quantite) {
-            throw new \Exception("Stock insuffisant pour {$produit->nom}");
-        }
-
         $article = Lignepanier::firstOrNew([
             'panier_id' => $panier->id,
             'produit_id' => $produitId,
         ]);
 
-        $article->quantite = $article->exists ? $article->quantite + $quantite : $quantite;
+        $newQuantite = $article->exists ? $article->quantite + $quantite : $quantite;
+
+        if ($produit->stock < $newQuantite) {
+            throw new \Exception("Stock insuffisant pour {$produit->nom} (disponible : {$produit->stock}).");
+        }
+
+        $article->quantite = $newQuantite;
         $article->prix_unitaire = $produit->prix;
         $article->save();
 

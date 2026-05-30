@@ -61,6 +61,10 @@ return new class extends Migration
 
     private function dropForeignIfExists(string $table, string $constraint): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $database = DB::getDatabaseName();
 
         $exists = DB::table('information_schema.TABLE_CONSTRAINTS')

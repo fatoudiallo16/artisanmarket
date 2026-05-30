@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Throwable;
 
 class AnnonceController extends Controller
 {
@@ -19,11 +18,7 @@ class AnnonceController extends Controller
 
     public function index(): View
     {
-        try {
-            $annonces = $this->annonceService->getPaginated(10);
-        } catch (Throwable) {
-            $annonces = collect();
-        }
+        $annonces = $this->annonceService->getPaginated(10);
 
         return view('annonces.index', compact('annonces'));
     }
