@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produit;
 use App\Models\Categorie;
+use App\Models\User;
 use App\Services\ProduitImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,9 +87,12 @@ class ProduitController extends Controller
         $this->authorize('create', Produit::class);
         $this->ensureCanManageProducts();
 
+        /** @var User $user */
+        $user = Auth::user();
+
         return view('public.produits.create', [
             'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
-            'vendeurs' => Auth::user()->hasRole('admin') ? \App\Models\Vendeur::where('statut', 'approuve')->orderBy('nom_boutique')->get() : collect(),
+            'vendeurs' => $user->hasRole('admin') ? \App\Models\Vendeur::where('statut', 'approuve')->orderBy('nom_boutique')->get() : collect(),
         ]);
     }
 
@@ -116,7 +120,9 @@ class ProduitController extends Controller
 
         $produit = Produit::create($data);
 
-        $redirectRoute = Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'home';
+        /** @var User $user */
+        $user = Auth::user();
+        $redirectRoute = $user->hasRole('admin') ? 'admin.dashboard' : 'home';
 
         return redirect()
             ->route($redirectRoute)

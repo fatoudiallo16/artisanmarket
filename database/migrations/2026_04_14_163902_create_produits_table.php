@@ -12,15 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('produits', function (Blueprint $table) {
-            $table->id();
+            $table->id();        
             $table->string('nom');
-            $table->text('description')->nullable();
-            $table->decimal('prix', 8, 2);
+            $table->longText('description')->nullable();
+            $table->decimal('prix', 10, 2);
             $table->integer('stock');
+            $table->string('slug')->unique();
             $table->string('image')->nullable();
-            $table->date('Date_ajout')->useCurrent();
-            $table->foreignId('vendeur_id')->constrained('vendeurs')->onDelete('cascade');
-            $table->foreignId('categorie_id')->constrained('categories')->onDelete('cascade');
+            $table->foreignId('vendeur_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('categorie_id')->constrained()->onDelete('cascade');
+            $table->enum('status', [
+            'pending',
+            'approved',
+            'rejected'
+            ])->default('pending');
             $table->timestamps();
         });
     }

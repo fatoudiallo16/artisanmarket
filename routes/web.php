@@ -1,21 +1,22 @@
 <?php
 
 use App\Http\Controllers\AnnonceController;
+use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\ProduitController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategorieController;
 
 
-Route::get('/home', function () {
-    return view('home');
-})->name('home');
+Route::get('/vendeur/dashboard', function () {
+    return view('vendeur.dashboard.index');
+})->middleware('auth')->name('vendeur.dashboard');
 
-
+Route::resource('vendeur/produits', ProduitController::class)->names('vendeur.produits');
 
 Route::resource('categories', CategorieController::class);
 
 Route::get('/client/dashboard', function () {
-    return view('client.dashboard');
+    return view('client.dashboard.dashboard');
 })->middleware('auth');
 
 Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');

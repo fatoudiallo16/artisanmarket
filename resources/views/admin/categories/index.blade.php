@@ -79,7 +79,7 @@
 
                         <td class="p-4 text-gray-600">
 
-                            {{ Str::limit($category->description, 50) }}
+                            {{ \Illuminate\Support\Str::limit($category->description, 50) }}
 
                         </td>
 
