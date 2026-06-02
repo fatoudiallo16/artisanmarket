@@ -3,86 +3,131 @@
 use App\Http\Controllers\AnnonceController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ProduitController;
+use App\Http\Controllers\PanierController;
+use App\Http\Controllers\CommandeController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\VendeurController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// ============ PUBLIC ROUTES ============
 
-Route::get('/vendeur/dashboard', function () {
-    return view('vendeur.dashboard.index');
-})->middleware('auth')->name('vendeur.dashboard');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
-Route::resource('vendeur/produits', ProduitController::class)->names('vendeur.produits');
-
-Route::resource('categories', CategorieController::class);
-
-Route::get('/client/dashboard', function () {
-    return view('client.dashboard.dashboard');
-})->middleware('auth');
-
-Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
-
+// Authentification routes
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->names('annonces');
-Route::resource('produits', App\Http\Controllers\ProduitController::class)
+// Public product and announcement routes
+Route::resource('produits', ProduitController::class)
     ->only(['index', 'show'])
     ->names('produits');
-Route::get('boutiques/{vendeur}', [App\Http\Controllers\VendeurController::class, 'boutique'])
+
+Route::resource('annonces', AnnonceController::class)
+    ->only(['index', 'show'])
+    ->names('annonces');
+
+Route::get('boutiques/{vendeur}', [VendeurController::class, 'boutique'])
     ->name('boutiques.show');
+
 Route::view('favoris', 'public.favoris.index')->name('favoris.index');
 
-Route::middleware(['auth', 'role:vendeur,admin'])->group(function () {
-    Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])
-        ->middleware('role:vendeur')
-        ->name('vendeur.boutique.update');
-    Route::resource('produits', App\Http\Controllers\ProduitController::class)
-        ->except(['index', 'show'])
-        ->names('produits');
-});
+// ============ AUTHENTICATED ROUTES ============
 
 Route::middleware('auth')->group(function () {
+    
+    // -------- CLIENT ROUTES --------
     Route::middleware('role:client')->group(function () {
-        Route::post('devenir-vendeur', [App\Http\Controllers\VendeurController::class, 'requestAccess'])
+        // Dashboard
+        Route::get('/client/dashboard', function () {
+            return view('client.dashboard.dashboard');
+        })->name('client.dashboard');
+
+        // Vendeur request
+        Route::post('devenir-vendeur', [VendeurController::class, 'requestAccess'])
             ->name('vendeur.request');
-        Route::get('panier', [App\Http\Controllers\PanierController::class, 'index'])->name('panier.index');
-        Route::get('commande', [App\Http\Controllers\PanierController::class, 'commande'])->name('commande.index');
-        Route::post('panier', [App\Http\Controllers\PanierController::class, 'store'])->name('panier.store');
-        Route::patch('panier/{produit}', [App\Http\Controllers\PanierController::class, 'update'])->name('panier.update');
-        Route::delete('panier/{produit}', [App\Http\Controllers\PanierController::class, 'destroy'])->name('panier.destroy');
-        Route::delete('panier', [App\Http\Controllers\PanierController::class, 'clear'])->name('panier.clear');
-        Route::post('panier/checkout', [App\Http\Controllers\PanierController::class, 'checkout'])->name('panier.checkout');
-        Route::post('paiements/{paiement}/pay', [App\Http\Controllers\PaiementController::class, 'pay'])
-            ->name('paiements.pay');
-        Route::get('paiements/{paiement}/facture', [App\Http\Controllers\PaiementController::class, 'invoice'])
-            ->name('paiements.invoice');
-        Route::resource('paiements', App\Http\Controllers\PaiementController::class)
-            ->only(['index', 'show', 'store', 'update', 'destroy'])
-            ->names('paiements');
-        Route::resource('commandes', App\Http\Controllers\CommandeController::class)
+
+        // Cart routes
+        Route::get('panier', [PanierController::class, 'index'])->name('panier.index');
+        Route::post('panier', [PanierController::class, 'store'])->name('panier.store');
+        Route::patch('panier/{produit}', [PanierController::class, 'update'])->name('panier.update');
+        Route::delete('panier/{produit}', [PanierController::class, 'destroy'])->name('panier.destroy');
+        Route::delete('panier', [PanierController::class, 'clear'])->name('panier.clear');
+        Route::post('panier/checkout', [PanierController::class, 'checkout'])->name('panier.checkout');
+
+        // Orders routes
+        Route::resource('commandes', CommandeController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy'])
             ->names('commandes');
+
+        // Payment routes
+        Route::resource('paiements', PaiementController::class)
+            ->only(['index', 'show', 'store', 'update', 'destroy'])
+            ->names('paiements');
+        Route::post('paiements/{paiement}/pay', [PaiementController::class, 'pay'])
+            ->name('paiements.pay');
+        Route::get('paiements/{paiement}/facture', [PaiementController::class, 'invoice'])
+            ->name('paiements.invoice');
     });
 
+    // -------- VENDOR ROUTES --------
+    Route::middleware('role:vendeur')->group(function () {
+        // Dashboard
+        Route::get('/vendeur/dashboard', function () {
+            return view('vendeur.dashboard.index');
+        })->name('vendeur.dashboard');
+
+        // Update boutique
+        Route::patch('ma-boutique', [VendeurController::class, 'updateBoutique'])
+            ->name('vendeur.boutique.update');
+
+        // Product management (CRUD)
+        Route::resource('vendeur/produits', ProduitController::class)
+            ->except(['index', 'show'])
+            ->names('vendeur.produits');
+    });
+
+    // -------- ADMIN ROUTES --------
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
-        Route::get('settings', [App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
-        Route::resource('users', App\Http\Controllers\UserController::class)
-            ->only(['index']);
-        Route::resource('roles', App\Http\Controllers\RoleController::class)
-            ->except(['create', 'edit']);
-        Route::resource('categories', App\Http\Controllers\CategorieController::class)
+        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('statistics', [AdminController::class, 'statistics'])->name('statistics');
+        Route::get('settings', [AdminController::class, 'settings'])->name('settings');
+
+        // Users management
+        Route::resource('users', UserController::class)->only(['index']);
+
+        // Roles management
+        Route::resource('roles', RoleController::class)->except(['create', 'edit']);
+
+        // Categories management
+        Route::resource('categories', CategorieController::class)
             ->except(['create', 'edit'])
             ->parameters(['categories' => 'categorie']);
-        Route::resource('vendeurs', App\Http\Controllers\VendeurController::class)
+
+        // Vendors management
+        Route::resource('vendeurs', VendeurController::class)
             ->only(['index', 'show', 'update', 'destroy']);
-        Route::resource('produits', App\Http\Controllers\ProduitController::class)->except(['index', 'show']);
-        Route::resource('annonces', AnnonceController::class)->except(['index', 'show']);
-        Route::resource('paiements', App\Http\Controllers\PaiementController::class)
+
+        // Products management
+        Route::resource('produits', ProduitController::class)
+            ->except(['index', 'show']);
+
+        // Announcements management
+        Route::resource('annonces', AnnonceController::class)
+            ->except(['index', 'show']);
+
+        // Payments management
+        Route::resource('paiements', PaiementController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy']);
-        Route::resource('commandes', App\Http\Controllers\CommandeController::class)
+
+        // Orders management
+        Route::resource('commandes', CommandeController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy']);
     });
 });
