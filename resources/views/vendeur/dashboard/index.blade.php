@@ -87,14 +87,14 @@
 
             <div class="grid md:grid-cols-3 gap-4">
 
-                <a href="{{ route('products.create') }}"
+                <a href="{{ route('vendeur.produits.create') }}"
                    class="border rounded-xl p-5 hover:bg-amber-50">
 
                     ➕ Ajouter un produit
 
                 </a>
 
-                <a href="{{ route('products.index') }}"
+                <a href="{{ route('vendeur.produits.index') }}"
                    class="border rounded-xl p-5 hover:bg-amber-50">
 
                     📦 Mes produits
@@ -124,7 +124,7 @@
 
                 </h2>
 
-                <a href="{{ route('products.index') }}"
+                <a href="{{ route('vendeur.produits.index') }}"
                    class="text-amber-600">
 
                     Voir tout
@@ -169,13 +169,13 @@
 
                                 <td class="py-4">
 
-                                    {{ $product->name }}
+                                    {{ $product->nom }}
 
                                 </td>
 
                                 <td>
 
-                                    {{ number_format($product->price,0,' ',' ') }}
+                                    {{ number_format((float) $product->prix,0,' ',' ') }}
 
                                     FCFA
 

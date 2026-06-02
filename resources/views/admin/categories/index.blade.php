@@ -16,7 +16,7 @@
             </p>
         </div>
 
-        <a href="{{ route('categories.create') }}"
+        <a href="{{ route('admin.categories.create') }}"
            class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-3 rounded-xl">
 
             + Nouvelle catégorie
@@ -105,21 +105,21 @@
 
                             <div class="flex justify-center gap-2">
 
-                                <a href="{{ route('categories.show',$category) }}"
+                                <a href="{{ route('admin.categories.show',$category) }}"
                                    class="bg-blue-500 text-white px-3 py-2 rounded-lg">
 
                                     Voir
 
                                 </a>
 
-                                <a href="{{ route('categories.edit',$category) }}"
+                                <a href="{{ route('admin.categories.edit',$category) }}"
                                    class="bg-yellow-500 text-white px-3 py-2 rounded-lg">
 
                                     Modifier
 
                                 </a>
 
-                                <form action="{{ route('categories.destroy',$category) }}"
+                                <form action="{{ route('admin.categories.destroy',$category) }}"
                                       method="POST">
 
                                     @csrf

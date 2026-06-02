@@ -16,7 +16,7 @@
             </p>
         </div>
 
-        <a href="{{ route('categories.index') }}"
+        <a href="{{ route('admin.categories.index') }}"
            class="bg-gray-200 px-4 py-2 rounded-xl">
             Retour
         </a>

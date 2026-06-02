@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Annonce;
+use App\Models\Categorie;
 use App\Models\Commande;
 use App\Models\Produit;
 use App\Models\User;
@@ -42,6 +43,11 @@ class HomeController extends Controller
                     'commandes' => Commande::count(),
                     'annonces' => Annonce::count(),
                 ],
+                'usersCount' => User::count(),
+                'productsCount' => Produit::count(),
+                'categoriesCount' => Categorie::count(),
+                'pendingProducts' => Produit::where('status', 'pending')->count(),
+                'recentProducts' => Produit::with('categorie')->latest()->limit(5)->get(),
                 'recent_vendeurs' => Vendeur::with('user')->latest()->limit(6)->get(),
                 'recent_annonces' => Annonce::with('user')->latest()->limit(5)->get(),
             ]);
@@ -49,11 +55,17 @@ class HomeController extends Controller
 
         if ($user->hasRole('vendeur')) {
             $vendeur = $user->vendeur;
+            $produits = $vendeur ? $vendeur->produits()->with('categorie')->latest()->get() : collect();
 
             return view('vendeur.dashboard.index', [
                 'vendeur' => $vendeur,
-                'produits' => $vendeur ? $vendeur->produits()->with('categorie')->latest()->get() : collect(),
+                'produits' => $produits,
+                'productsCount' => $produits->count(),
+                'approvedProducts' => $produits->where('status', 'approved')->count(),
+                'pendingProducts' => $produits->where('status', 'pending')->count(),
+                'recentProducts' => $produits->take(5),
                 'categoriesCount' => $vendeur ? $vendeur->produits()->distinct('categorie_id')->count('categorie_id') : 0,
+                'revenue' => 0,
             ]);
         }
 

@@ -16,7 +16,11 @@ class MarketplaceSeeder extends Seeder
 {
     public function run(): void
     {
-        $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+        $categoryColumn = match (true) {
+            Schema::hasColumn('categories', 'name') => 'name',
+            Schema::hasColumn('categories', 'nom') => 'nom',
+            default => 'nom_categorie',
+        };
 
         $categories = collect([
             'bijoux' => Categorie::firstOrCreate([$categoryColumn => 'bijoux']),

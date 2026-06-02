@@ -48,6 +48,7 @@ class ProduitVisual
     {
         $name = $produit->categorie?->nom
             ?? $produit->categorie?->nom_categorie
+            ?? $produit->categorie?->name
             ?? '';
 
         return self::forCategory($name);

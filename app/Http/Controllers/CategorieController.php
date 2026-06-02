@@ -4,109 +4,129 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CategorieController extends Controller
 {
-    /**
-     * Afficher la liste des catégories
-     */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse|View
     {
-        return response()->json(
-            Categorie::withCount('produits')->latest()->paginate(20)
-        );
+        $categories = Categorie::withCount('produits')->latest()->paginate(20);
+
+        if ($request->expectsJson()) {
+            return response()->json($categories);
+        }
+
+        return view('admin.categories.index', compact('categories'));
     }
 
-    /**
-     * Afficher une catégorie spécifique
-     */
-    public function show(Categorie $categorie): JsonResponse
+    public function show(Request $request, Categorie $categorie): JsonResponse|View
     {
-        return response()->json(
-            $categorie->load('produits')
-        );
+        $categorie->loadCount('produits');
+
+        if ($request->expectsJson()) {
+            return response()->json($categorie->load('produits'));
+        }
+
+        return view('admin.categories.show', [
+            'categorie' => $categorie,
+            'category' => $categorie,
+        ]);
     }
 
-    /**
-     * Créer une nouvelle catégorie
-     */
-    public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|max:255',
-        'image' => 'nullable|image'
-    ]);
-
-    $imagePath = null;
-
-    if ($request->hasFile('image')) {
-
-        $imagePath = $request
-            ->file('image')
-            ->store('categories', 'public');
-    }
-    
-
-    Categorie::create([
-        'name' => $request->name,
-        'slug' => Str::slug($request->name),
-        'description' => $request->description,
-        'image' => $imagePath,
-        'status' => true
-    ]);
-
-    return redirect()
-        ->route('categories.index')
-        ->with('success', 'Catégorie créée.');
-}
-
-    /**
-     * Mettre à jour une catégorie
-     */
-    public function update(Request $request, Categorie $categorie)
-{
-    $data = $request->validate([
-        'name' => 'required|max:255',
-        'description' => 'nullable',
-        'image' => 'nullable|image'
-    ]);
-
-    if ($request->hasFile('image')) {
-
-        $data['image'] = $request
-            ->file('image')
-            ->store('categories', 'public');
+    public function create(): View
+    {
+        return view('admin.categories.create');
     }
 
-    $data['status'] = $request->has('status');
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'image'],
+            'status' => ['nullable', 'boolean'],
+        ]);
 
-    $categorie->update($data);
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
 
-    return redirect()
-        ->route('categories.index')
-        ->with('success', 'Catégorie mise à jour.');
-}
+        $data['slug'] = $this->uniqueSlug($data['name']);
+        $data['status'] = $request->boolean('status');
 
-    /**
-     * Supprimer une catégorie
-     */
-    public function destroy(Categorie $categorie): JsonResponse
+        Categorie::create($data);
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Categorie creee.');
+    }
+
+    public function edit(Categorie $categorie): View
+    {
+        return view('admin.categories.edit', [
+            'categorie' => $categorie,
+            'category' => $categorie,
+        ]);
+    }
+
+    public function update(Request $request, Categorie $categorie): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'image'],
+            'status' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        if ($data['name'] !== $categorie->name) {
+            $data['slug'] = $this->uniqueSlug($data['name'], $categorie->id);
+        }
+
+        $data['status'] = $request->boolean('status');
+        $categorie->update($data);
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Categorie mise a jour.');
+    }
+
+    public function destroy(Request $request, Categorie $categorie): JsonResponse|RedirectResponse
     {
         $categorie->delete();
 
-        return response()->json([
-            'message' => 'Catégorie supprimée.',
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Categorie supprimee.',
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Categorie supprimee.');
     }
-    public function create()
-   {
-    return view('admin.categories.create');
+
+    private function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: Str::random(8);
+        $slug = $base;
+        $suffix = 2;
+
+        while (
+            Categorie::where('slug', $slug)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
-    public function edit(Categorie $categorie)
-{
-    return view('admin.categories.edit', compact('categorie'));
-}
 }

@@ -155,11 +155,11 @@
                         <tr class="border-b">
 
                             <td class="py-4">
-                                {{ $product->name }}
+                                {{ $product->nom }}
                             </td>
 
                             <td>
-                                {{ number_format($product->price,0,' ',' ') }}
+                                {{ number_format((float) $product->prix,0,' ',' ') }}
                                 FCFA
                             </td>
 

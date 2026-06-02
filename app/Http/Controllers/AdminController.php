@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Commande;
 use App\Models\Annonce;
+use App\Models\Categorie;
 use App\Models\Paiement;
 use App\Models\Produit;
 use App\Models\User;
@@ -48,6 +49,11 @@ class AdminController extends Controller
                 'commandes' => $stats['total_commandes'],
                 'annonces' => Annonce::count(),
             ],
+            'usersCount' => $stats['total_users'],
+            'productsCount' => $stats['total_produits'],
+            'categoriesCount' => Categorie::count(),
+            'pendingProducts' => Produit::where('status', 'pending')->count(),
+            'recentProducts' => Produit::with('categorie')->latest()->limit(5)->get(),
             'recent_commandes' => $recent_commandes,
             'recent_paiements' => $recent_paiements,
             'recent_vendeurs' => $recent_vendeurs,

@@ -3,12 +3,33 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class Produit extends Model
 {
-    protected $fillable = ['nom', 'description', 'prix', 'stock', 'image', 'vendeur_id', 'categorie_id'];
+    protected $fillable = [
+        'nom',
+        'description',
+        'prix',
+        'stock',
+        'slug',
+        'image',
+        'status',
+        'vendeur_id',
+        'categorie_id',
+    ];
 
     protected $appends = ['image_url'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Produit $produit) {
+            if (Schema::hasColumn($produit->getTable(), 'slug') && blank($produit->slug)) {
+                $produit->slug = static::uniqueSlug($produit->nom);
+            }
+        });
+    }
 
     public function getImageUrlAttribute(): string
     {
@@ -37,5 +58,19 @@ class Produit extends Model
     public function lignepaniers()
     {
         return $this->hasMany(Lignepanier::class, 'produit_id');
+    }
+
+    private static function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: Str::random(8);
+        $slug = $base;
+        $suffix = 2;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

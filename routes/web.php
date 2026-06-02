@@ -15,17 +15,28 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// ============ PUBLIC ROUTES ============
 
-Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/vendeur/dashboard', function () {
+    return view('vendeur.dashboard.index');
+})->middleware('auth')->name('vendeur.dashboard');
+
+Route::resource('vendeur/produits', ProduitController::class)->names('vendeur.produits');
+
+Route::resource('categories', CategorieController::class);
+
+Route::get('/client/dashboard', function () {
+    return view('client.dashboard.dashboard');
+})->middleware('auth');
+
+Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
 
 // Authentification routes
 Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-// Public product and announcement routes
-Route::resource('produits', ProduitController::class)
+Route::resource('annonces', AnnonceController::class)->only(['index', 'show'])->names('annonces');
+Route::resource('produits', App\Http\Controllers\ProduitController::class)
     ->only(['index', 'show'])
     ->names('produits');
 
@@ -38,7 +49,14 @@ Route::get('boutiques/{vendeur}', [VendeurController::class, 'boutique'])
 
 Route::view('favoris', 'public.favoris.index')->name('favoris.index');
 
-// ============ AUTHENTICATED ROUTES ============
+Route::middleware(['auth', 'role:vendeur,admin'])->group(function () {
+    Route::patch('ma-boutique', [App\Http\Controllers\VendeurController::class, 'updateBoutique'])
+        ->middleware('role:vendeur')
+        ->name('vendeur.boutique.update');
+    Route::resource('produits', App\Http\Controllers\ProduitController::class)
+        ->except(['index', 'show'])
+        ->names('produits');
+});
 
 Route::middleware('auth')->group(function () {
     
@@ -95,18 +113,14 @@ Route::middleware('auth')->group(function () {
 
     // -------- ADMIN ROUTES --------
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('statistics', [AdminController::class, 'statistics'])->name('statistics');
-        Route::get('settings', [AdminController::class, 'settings'])->name('settings');
-
-        // Users management
-        Route::resource('users', UserController::class)->only(['index']);
-
-        // Roles management
-        Route::resource('roles', RoleController::class)->except(['create', 'edit']);
-
-        // Categories management
-        Route::resource('categories', CategorieController::class)
+        Route::get('/', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
+        Route::get('settings', [App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
+        Route::resource('users', App\Http\Controllers\UserController::class)
+            ->only(['index']);
+        Route::resource('roles', App\Http\Controllers\RoleController::class)
+            ->except(['create', 'edit']);
+        Route::resource('categories', App\Http\Controllers\CategorieController::class)
             ->except(['create', 'edit'])
             ->parameters(['categories' => 'categorie']);
 

@@ -12,7 +12,11 @@ class WelcomeController extends Controller
 {
     public function index(): View
     {
-        $categoryColumn = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+        $categoryColumn = match (true) {
+            Schema::hasColumn('categories', 'name') => 'name',
+            Schema::hasColumn('categories', 'nom') => 'nom',
+            default => 'nom_categorie',
+        };
 
         $produitsEnVedette = Produit::query()
             ->with(['vendeur', 'categorie'])

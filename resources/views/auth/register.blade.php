@@ -26,28 +26,17 @@
 
                     <div class="grid md:grid-cols-2 gap-4">
 
+                       
                         <div>
                             <label class="block text-sm font-medium mb-2">
-                                Prénom
+                                Nom Complet
                             </label>
 
                             <input
                                 type="text"
-                                name="first_name"
+                                name="name"
                                 class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-                                placeholder="Votre prénom">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium mb-2">
-                                Nom
-                            </label>
-
-                            <input
-                                type="text"
-                                name="last_name"
-                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-                                placeholder="Votre nom">
+                                placeholder="Votre nom complet">
                         </div>
 
                     </div>

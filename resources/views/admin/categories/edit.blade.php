@@ -18,7 +18,7 @@
 
     <div class="bg-white rounded-2xl shadow p-6">
 
-        <form action="{{ route('categories.update', $category) }}"
+        <form action="{{ route('admin.categories.update', $category) }}"
               method="POST"
               enctype="multipart/form-data"
               class="space-y-6">
@@ -96,7 +96,7 @@
 
                 </button>
 
-                <a href="{{ route('categories.index') }}"
+                <a href="{{ route('admin.categories.index') }}"
                    class="bg-gray-200 px-6 py-3 rounded-xl">
 
                     Annuler
