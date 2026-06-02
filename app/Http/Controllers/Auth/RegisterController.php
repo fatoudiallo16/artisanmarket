@@ -44,6 +44,7 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
+     * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -58,12 +59,20 @@ class RegisterController extends Controller
     /**
      * Create a new user instance after a valid registration.
      *
-     * @return User
+     * @param  array  $data
+     * @return \App\Models\User
      */
     protected function create(array $data)
     {
-        $clientRole = Role::firstOrCreate(['nom_role' => 'client']);
+        // Get the 'client' role
+        $clientRole = Role::where('nom_role', 'client')->first();
+        
+        if (!$clientRole) {
+            // Fallback: create the role if it doesn't exist
+            $clientRole = Role::create(['nom_role' => 'client']);
+        }
 
+        // Create the user with the client role
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -71,6 +80,7 @@ class RegisterController extends Controller
             'role_id' => $clientRole->id,
         ]);
 
+        // Sync the user profile based on role
         $user->load('role');
         $user->syncProfileByRole();
 
