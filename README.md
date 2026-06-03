@@ -191,8 +191,7 @@ Ce projet Laravel utilise le runtime **vercel-php** (PHP 8.3). Ne pas utiliser `
 
 | Fichier | Rôle |
 |---------|------|
-| `vercel.json` | Runtime PHP, routes vers `api/index.php`, variables pour `/tmp` |
-| `api/index.php` | Point d’entrée Vercel (obligatoire dans `/api`) |
+| `vercel.json` | Runtime PHP, routes vers `server.php`, variables pour `/tmp` |
 | `server.php` | Sert les assets de `public/` puis délègue à Laravel |
 | `.vercelignore` | Exclut `.env`, caches locaux, etc. |
 

@@ -2,15 +2,14 @@
     "version": 2,
     "framework": null,
     "functions": {
-        "api/*.php": {
-            "runtime": "vercel-php@0.7.4",
-            "maxDuration": 60
+        "server.php": {
+            "runtime": "vercel-php@0.7.4"
         }
     },
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "/api/index.php"
+            "dest": "/server.php"
         }
     ],
     "env": {
