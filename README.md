@@ -185,14 +185,23 @@ php artisan test
 
 ## Déploiement sur Vercel
 
-Ce projet Laravel utilise le runtime **vercel-php** (PHP 8.3). Ne pas utiliser `outputDirectory` seul : l’application doit passer par `server.php`.
+Ce projet Laravel utilise le runtime **vercel-php** (PHP 8.3). Le point d’entrée **doit** être `api/index.php` (exigence Vercel pour les fonctions PHP).
+
+### Réglages Vercel (dashboard)
+
+Dans **Project → Settings → General** :
+
+- **Root Directory** : laisser vide (racine du dépôt `artisanmarket`)
+- **Output Directory** : **laisser vide** (ne pas mettre `public/build` ni `dist` — sinon erreur `404: NOT_FOUND`)
+- **Framework Preset** : Other
 
 ### Fichiers de déploiement
 
 | Fichier | Rôle |
 |---------|------|
-| `vercel.json` | Runtime PHP, routes vers `server.php`, variables pour `/tmp` |
-| `server.php` | Sert les assets de `public/` puis délègue à Laravel |
+| `vercel.json` | Build PHP + assets statiques, routes vers `api/index.php` |
+| `api/index.php` | Entrée serverless Vercel |
+| `server.php` | Sert les fichiers de `public/` puis Laravel |
 | `.vercelignore` | Exclut `.env`, caches locaux, etc. |
 
 ### Variables d’environnement (dashboard Vercel)
