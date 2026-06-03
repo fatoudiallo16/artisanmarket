@@ -14,6 +14,12 @@ return new class extends Migration
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
             $table->string('nom_role')->unique();
+            $table->enum('role', [
+            'client',
+            'vendeur',
+            'admin'
+             ])->default('client');
+
             $table->timestamps();
         });
     }
