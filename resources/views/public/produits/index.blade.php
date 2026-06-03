@@ -59,7 +59,7 @@
 
                     <div class="p-4">
                         <a
-                            href="{{ route('produits.categorie', $produit->categorie) }}"
+                            href="{{ route('produits.index', ['categorie' => $produit->categorie_id]) }}"
                             class="text-sm text-amber-700 hover:text-amber-800"
                         >
                             {{ ucfirst($categoryName) }}
