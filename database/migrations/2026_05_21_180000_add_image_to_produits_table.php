@@ -9,14 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('produits', function (Blueprint $table) {
-            $table->string('image')->nullable()->after('stock');
+            if (! Schema::hasColumn('produits', 'image')) {
+                $table->string('image')->nullable()->after('stock');
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::table('produits', function (Blueprint $table) {
-            $table->dropColumn('image');
-        });
+        // La colonne `image` est définie par la migration de création de `produits`.
+        // Cette migration ne la supprime donc pas pour éviter de retirer une colonne
+        // dont elle n'est pas propriétaire.
     }
 };
