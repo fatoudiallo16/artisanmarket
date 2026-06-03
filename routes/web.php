@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AnnonceController;
-use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\PanierController;
 use App\Http\Controllers\CommandeController;
@@ -21,8 +20,6 @@ Route::get('/vendeur/dashboard', function () {
 })->middleware('auth')->name('vendeur.dashboard');
 
 Route::resource('vendeur/produits', ProduitController::class)->names('vendeur.produits');
-
-Route::resource('categories', CategorieController::class);
 
 Route::get('/client/dashboard', function () {
     return view('client.dashboard.dashboard');
