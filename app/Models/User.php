@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,10 +12,6 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'role_id'])]
 #[Hidden(['password', 'remember_token'])]
-/**
- * @method bool hasRole(string ...$roles)
- * @method void syncProfileByRole()
- */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -79,7 +76,7 @@ class User extends Authenticatable
             }
 
             if ($this->role->nom_role === 'vendeur') {
-                $this->vendeurProfile()->firstOrCreate([], [
+                $this->vendeurProfile()->firstOrCreate([
                     'nom_boutique' => 'Boutique '.$this->name,
                 ]);
                 return;

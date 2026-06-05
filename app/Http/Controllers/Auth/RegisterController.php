@@ -44,7 +44,6 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -52,7 +51,6 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }
@@ -60,29 +58,19 @@ class RegisterController extends Controller
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
-     * @return \App\Models\User
+     * @return User
      */
     protected function create(array $data)
     {
-        // Get the 'client' role
-        $clientRole = Role::where('nom_role', 'client')->first();
-        
-        if (!$clientRole) {
-            // Fallback: create the role if it doesn't exist
-            $clientRole = Role::create(['nom_role' => 'client']);
-        }
+        $clientRole = Role::firstOrCreate(['nom_role' => 'client']);
 
-        // Create the user with the client role
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role_id' => $clientRole->id,
-            'phone' => $data['phone'],
         ]);
 
-        // Sync the user profile based on role
         $user->load('role');
         $user->syncProfileByRole();
 

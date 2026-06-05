@@ -4,22 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Commande;
 use App\Models\Paiement;
-use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PaiementController extends Controller
 {
     public function __construct(
         private PaymentService $paymentService,
-        private InvoiceService $invoiceService
+        private InvoiceService $invoiceService,
     ) {
     }
 
@@ -27,10 +25,8 @@ class PaiementController extends Controller
     {
         $this->authorize('viewAny', Paiement::class);
 
-        /** @var User|null $user */
-        $user = Auth::user();
         $query = Paiement::with('commande')->latest();
-        if ($user && !$user->hasRole('admin')) {
+        if (!Auth::user()->hasRole('admin')) {
             $query->whereHas('commande', function ($q): void {
                 $q->where('user_id', Auth::id());
             });
@@ -44,49 +40,8 @@ class PaiementController extends Controller
     public function show(Paiement $paiement): View
     {
         $this->authorize('view', $paiement);
-        $paiement->load('commande.lignecommandes.produit', 'commande.user');
 
         return view('paiements.show', compact('paiement'));
-    }
-
-    public function pay(Request $request, Paiement $paiement): RedirectResponse
-    {
-        $this->authorize('pay', $paiement);
-
-        if ($paiement->statut !== 'en_attente') {
-            return redirect()
-                ->route('commandes.show', $paiement->commande_id)
-                ->with('error', 'Ce paiement ne peut plus être validé.');
-        }
-
-        $data = $request->validate([
-            'mode_paiement' => ['required', 'in:carte,mobile_money,virement,especes,en_ligne'],
-        ]);
-
-        $paiement = $this->paymentService->markAsPaid($paiement, $data['mode_paiement']);
-
-        return redirect()
-            ->route('paiements.show', $paiement)
-            ->with('success', 'Paiement enregistré. Facture ' . $paiement->numero_facture . ' disponible au téléchargement.');
-    }
-
-    public function invoice(Paiement $paiement): StreamedResponse
-    {
-        $this->authorize('view', $paiement);
-
-        if ($paiement->statut !== 'paye') {
-            abort(404, 'Facture disponible uniquement pour les paiements validés.');
-        }
-
-        if (!$paiement->facture_pdf || !Storage::disk('local')->exists($paiement->facture_pdf)) {
-            $paiement = $this->invoiceService->generateAndStore($paiement);
-        }
-
-        $filename = ($paiement->numero_facture ?? 'facture-' . $paiement->id) . '.pdf';
-
-        return Storage::disk('local')->download($paiement->facture_pdf, $filename, [
-            'Content-Type' => 'application/pdf',
-        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -101,23 +56,19 @@ class PaiementController extends Controller
         ]);
 
         $commande = Commande::findOrFail((int) $data['commande_id']);
-        /** @var User|null $user */
-        $user = Auth::user();
-        if ($user && !$user->hasRole('admin') && (int) $commande->user_id !== (int) Auth::id()) {
-            abort(403, 'Commande non autorisée pour ce paiement.');
+        if (!Auth::user()->hasRole('admin') && (int) $commande->user_id !== (int) Auth::id()) {
+            abort(403, 'Commande non autorisee pour ce paiement.');
         }
 
-        $paiement = $this->paymentService->createPayment(
-            $commande->id,
-            $data['montant'],
-            $data['mode_paiement']
-        );
+        $paiement = Paiement::create([
+            'commande_id' => $commande->id,
+            'montant' => $data['montant'],
+            'mode_paiement' => $data['mode_paiement'],
+            'statut' => $data['statut'] ?? 'en_attente',
+            'date_paiement' => now(),
+        ]);
 
-        if (($data['statut'] ?? null) === 'paye') {
-            $paiement = $this->paymentService->markAsPaid($paiement, $data['mode_paiement']);
-        }
-
-        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement enregistré.');
+        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement enregistre.');
     }
 
     public function update(Request $request, Paiement $paiement): RedirectResponse
@@ -129,30 +80,45 @@ class PaiementController extends Controller
             'mode_paiement' => ['nullable', 'string', 'max:100'],
         ]);
 
-        if ($data['statut'] === 'paye') {
-            $this->paymentService->markAsPaid($paiement, $data['mode_paiement'] ?? null);
-        } elseif ($data['statut'] === 'rembourse') {
-            $this->paymentService->refundPayment($paiement);
-        } elseif ($data['statut'] === 'echoue') {
-            $this->paymentService->markAsFailed($paiement);
-        } else {
-            $paiement->update($data);
-        }
+        $paiement->update($data);
 
-        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement mis à jour.');
+        return redirect()->route($this->routeName('show'), $paiement)->with('success', 'Paiement mis a jour.');
     }
 
     public function destroy(Paiement $paiement): RedirectResponse
     {
         $this->authorize('delete', $paiement);
 
-        if ($paiement->facture_pdf) {
-            Storage::disk('local')->delete($paiement->facture_pdf);
-        }
-
         $paiement->delete();
 
         return redirect()->route($this->routeName('index'))->with('success', 'Paiement supprime.');
+    }
+
+    public function pay(Request $request, Paiement $paiement): RedirectResponse
+    {
+        $this->authorize('view', $paiement);
+
+        $data = $request->validate([
+            'mode_paiement' => ['required', 'string', 'max:100'],
+        ]);
+
+        $this->paymentService->markAsPaid($paiement, $data['mode_paiement']);
+
+        return redirect()
+            ->route('paiements.show', $paiement)
+            ->with('success', 'Paiement enregistre avec succes.');
+    }
+
+    public function invoice(Paiement $paiement): BinaryFileResponse
+    {
+        $this->authorize('view', $paiement);
+
+        $paiement = $this->invoiceService->generateAndStore($paiement);
+        $path = $this->invoiceService->absolutePath($paiement);
+
+        abort_unless($path, 404, 'Facture introuvable.');
+
+        return response()->download($path, ($paiement->numero_facture ?? 'facture').'.pdf');
     }
 
     private function routeName(string $action): string
