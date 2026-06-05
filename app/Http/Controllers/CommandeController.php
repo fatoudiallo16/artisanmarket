@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commande;
-use App\Models\User;
-use App\Services\OrderService;
-use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -14,21 +11,16 @@ use Illuminate\Support\Facades\Route;
 
 class CommandeController extends Controller
 {
-    public function __construct(private OrderService $orderService, private PaymentService $paymentService)
-    {
-    }
     public function index(): View
     {
         $this->authorize('viewAny', Commande::class);
 
-        /** @var User|null $user */
-        $user = Auth::user();
         $query = Commande::query()->latest();
-        if ($user && !$user->hasRole('admin')) {
+        if (!Auth::user()->hasRole('admin')) {
             $query->where('user_id', Auth::id());
         }
 
-        $commandes = $query->paginate(15);
+        $commandes = $query->with('paiement')->paginate(15);
 
         return view('client.commandes.index', compact('commandes'));
     }
@@ -36,6 +28,8 @@ class CommandeController extends Controller
     public function show(Commande $commande): View
     {
         $this->authorize('view', $commande);
+
+        $commande->load(['lignecommandes.produit', 'paiement']);
 
         return view('client.commandes.show', compact('commande'));
     }
@@ -64,21 +58,18 @@ class CommandeController extends Controller
             'statut' => ['required', 'in:en_attente,en_cours,payee,annulee'],
         ]);
 
-        $commande->update(['statut' => $data['statut']]);
+        $commande->update($data);
 
-        return redirect()->route($this->routeName('show'), $commande)->with('success', 'Commande mise à jour.');
+        return redirect()->route($this->routeName('show'), $commande)->with('success', 'Commande mise a jour.');
     }
 
     public function destroy(Commande $commande): RedirectResponse
     {
         $this->authorize('delete', $commande);
 
-        try {
-            $this->orderService->cancelOrder($commande);
-            return redirect()->route($this->routeName('index'))->with('success', 'Commande annulée.');
-        } catch (\Exception $e) {
-            return redirect()->route($this->routeName('show'), $commande)->with('error', $e->getMessage());
-        }
+        $commande->delete();
+
+        return redirect()->route($this->routeName('index'))->with('success', 'Commande supprimee.');
     }
 
     private function routeName(string $action): string

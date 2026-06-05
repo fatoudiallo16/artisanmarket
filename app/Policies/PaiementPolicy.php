@@ -28,16 +28,6 @@ class PaiementPolicy
         return $user->hasRole('admin');
     }
 
-    public function pay(User $user, Paiement $paiement): bool
-    {
-        $paiement->loadMissing('commande');
-
-        return $user->hasRole('client')
-            && (int) ($paiement->commande->user_id ?? 0) === (int) $user->id
-            && $paiement->statut === 'en_attente'
-            && ($paiement->commande->statut ?? null) === 'en_attente';
-    }
-
     public function delete(User $user, Paiement $paiement): bool
     {
         return $user->hasRole('admin');

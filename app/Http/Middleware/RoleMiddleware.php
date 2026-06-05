@@ -15,14 +15,8 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        $allowed = collect($roles)
-            ->flatMap(fn (string $role) => str_contains($role, ',') ? explode(',', $role) : [$role])
-            ->map(fn (string $role) => trim($role))
-            ->filter()
-            ->all();
-
-        if (!$user || !$user->role || !in_array($user->role->nom_role, $allowed, true)) {
-            abort(403, 'Accès refusé. Connectez-vous avec un compte vendeur ou administrateur.');
+        if (!$user || !$user->role || !in_array($user->role->nom_role, $roles, true)) {
+            abort(403, 'Acces refuse.');
         }
 
         return $next($request);

@@ -82,19 +82,17 @@
                     Catégories
                 </a>
 
-                <a
-                    href="{{ route('produits.index') }}"
-                    class="text-slate-700 hover:text-[#D86513] transition font-medium"
-                >
-                    Boutiques
-                </a>
+                @if(auth()->check())
 
-                <a
-                    href="{{ route('annonces.index') }}"
-                    class="text-slate-700 hover:text-[#D86513] transition font-medium"
-                >
-                    Annonces
-                </a>
+    <a href="{{ route('client.dashboard') }}">
+        Tableau de bord
+    </a>
+
+    <a href="{{ route('client.profile') }}">
+        Mon profil
+    </a>
+
+@endif
 
             </div>
 

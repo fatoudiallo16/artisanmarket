@@ -29,12 +29,6 @@ class CommandePolicy
 
     public function delete(User $user, Commande $commande): bool
     {
-        if ($user->hasRole('admin')) {
-            return true;
-        }
-
-        return $user->hasRole('client')
-            && (int) $commande->user_id === (int) $user->id
-            && in_array($commande->statut, ['en_attente', 'en_cours'], true);
+        return $user->hasRole('admin');
     }
 }

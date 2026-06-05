@@ -79,7 +79,8 @@ class OrderService
                 // Vérifier le stock
                 $produit = Produit::find($article->produit_id);
                 if (!$produit || $produit->stock < $article->quantite) {
-                    throw new \Exception("Stock insuffisant pour {$produit->nom}");
+                    $nom = $produit?->nom ?? 'Produit #'.$article->produit_id;
+                    throw new \Exception("Stock insuffisant pour {$nom}");
                 }
 
                 // Créer la ligne de commande
