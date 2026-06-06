@@ -183,6 +183,55 @@ php artisan test
 
 ---
 
+## Déploiement sur Vercel
+
+Ce projet Laravel utilise le runtime **vercel-php** (PHP 8.3). Le point d’entrée **doit** être `api/index.php` (exigence Vercel pour les fonctions PHP).
+
+### Réglages Vercel (dashboard)
+
+Dans **Project → Settings → General** :
+
+- **Root Directory** : laisser vide (racine du dépôt `artisanmarket`)
+- **Output Directory** : **laisser vide** (ne pas mettre `public/build` ni `dist` — sinon erreur `404: NOT_FOUND`)
+- **Framework Preset** : Other
+
+### Fichiers de déploiement
+
+| Fichier | Rôle |
+|---------|------|
+| `vercel.json` | Build PHP + assets statiques, routes vers `api/index.php` |
+| `api/index.php` | Entrée serverless Vercel |
+| `server.php` | Sert les fichiers de `public/` puis Laravel |
+| `.vercelignore` | Exclut `.env`, caches locaux, etc. |
+
+### Variables d’environnement (dashboard Vercel)
+
+À configurer dans **Project → Settings → Environment Variables** (ne pas commiter) :
+
+| Variable | Exemple / note |
+|----------|----------------|
+| `APP_KEY` | `php artisan key:generate --show` |
+| `APP_URL` | URL de production (`https://votre-projet.vercel.app`) |
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST` | Hôte MySQL distant (PlanetScale, Railway, etc.) |
+| `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Credentials du service |
+| `DB_PORT` | `3306` |
+
+Optionnel si la base est prête au déploiement : ajouter dans `composer.json` → script `vercel` la ligne `@php artisan migrate --force`.
+
+### Build
+
+Vercel exécute `composer install` puis le script `vercel` défini dans `composer.json` (`npm run build`, lien `storage`).
+
+### Limitations serverless
+
+- Pas de `php artisan serve` : tout passe par des fonctions PHP.
+- Sessions : `cookie` par défaut sur Vercel (`vercel.json`) ; possible `database` si MySQL distant + table `sessions`.
+- Fichiers uploadés : stockage éphémère ; prévoir S3 ou équivalent en production.
+- Base locale `127.0.0.1` ne fonctionne pas : utiliser une base MySQL hébergée.
+
+---
+
 ## Sécurité
 
 - Ne commitez **jamais** le fichier `.env` (clés, mots de passe base de données).
