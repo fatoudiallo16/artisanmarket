@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Vendeur;
 use Illuminate\Foundation\Auth\RegistersUsers;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -29,7 +30,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/client/dashboard';
 
     /**
      * Create a new controller instance.
@@ -67,13 +68,52 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => $data['password'],
             'role_id' => $clientRole->id,
         ]);
 
         $user->load('role');
-        $user->syncProfileByRole();
+
+        try {
+            $user->syncProfileByRole();
+        } catch (\Throwable) {
+            // Le profil peut être créé plus tard si la migration n'est pas encore passée.
+        }
+
+        if (($data['account_type'] ?? 'client') === 'seller') {
+            Vendeur::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'id_utilisateur' => $user->id,
+                    'name' => $user->name,
+                    'nom_boutique' => 'Boutique '.$user->name,
+                    'statut' => 'en_attente',
+                ]
+            );
+        }
 
         return $user;
+    }
+
+    protected function redirectTo(): string
+    {
+        $user = $this->guard()->user();
+
+        if ($user?->hasRole('admin')) {
+            return route('admin.dashboard');
+        }
+
+        if ($user?->hasRole('vendeur')) {
+            return route('vendeur.dashboard');
+        }
+
+        return route('client.dashboard');
+    }
+
+    protected function registered(Request $request, $user)
+    {
+        if (($request->input('account_type') ?? 'client') === 'seller') {
+            session()->flash('success', 'Compte créé. Votre demande vendeur est en attente de validation.');
+        }
     }
 }

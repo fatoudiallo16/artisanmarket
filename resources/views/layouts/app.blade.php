@@ -35,6 +35,34 @@
         {{-- CONTENT --}}
         <main class="flex-1">
 
+            @if (session('success'))
+                <div class="max-w-7xl mx-auto px-4 pt-4">
+                    <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+                        {{ session('success') }}
+                    </div>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="max-w-7xl mx-auto px-4 pt-4">
+                    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+                        {{ session('error') }}
+                    </div>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="max-w-7xl mx-auto px-4 pt-4">
+                    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+                        <ul class="mb-0 list-disc ps-5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             @yield('content')
 
         </main>

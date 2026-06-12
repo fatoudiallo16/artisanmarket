@@ -71,41 +71,63 @@
                     </span>
                 </div>
 
-                <form method="POST" action="{{ route('panier.store') }}" class="mt-10">
-                    @csrf
-                    <input type="hidden" name="produit_id" value="{{ $produit->id }}">
+                @auth
+                    <form method="POST" action="{{ route('panier.store') }}" class="mt-10">
+                        @csrf
+                        <input type="hidden" name="produit_id" value="{{ $produit->id }}">
 
-                    <label class="font-bold text-slate-900 mb-4 block" for="quantite">
-                        Quantite
-                    </label>
+                        <label class="font-bold text-slate-900 mb-4 block" for="quantite">
+                            Quantite
+                        </label>
 
-                    <input
-                        id="quantite"
-                        type="number"
-                        name="quantite"
-                        value="1"
-                        min="1"
-                        max="{{ max(1, (int) $produit->stock) }}"
-                        class="w-32 h-14 rounded-2xl border border-[#E7DDD1] bg-white px-4 font-bold"
-                    >
-
-                    <div class="mt-8 flex flex-col sm:flex-row gap-5">
-                        <button
-                            type="submit"
-                            class="flex-1 h-16 rounded-2xl bg-[#D86513] hover:bg-[#C45B10] transition text-white font-bold text-lg shadow-lg shadow-orange-200 disabled:opacity-50"
-                            {{ $produit->stock <= 0 ? 'disabled' : '' }}
+                        <input
+                            id="quantite"
+                            type="number"
+                            name="quantite"
+                            value="1"
+                            min="1"
+                            max="{{ max(1, (int) $produit->stock) }}"
+                            class="w-32 h-14 rounded-2xl border border-[#E7DDD1] bg-white px-4 font-bold"
                         >
-                            Ajouter au panier
-                        </button>
 
-                        <a
-                            href="{{ route('produits.index') }}"
-                            class="h-16 px-8 rounded-2xl border border-[#E7DDD1] bg-white hover:border-[#D86513] hover:text-[#D86513] transition flex items-center justify-center font-semibold"
-                        >
-                            Continuer mes achats
-                        </a>
+                        <div class="mt-8 flex flex-col sm:flex-row gap-5">
+                            <button
+                                type="submit"
+                                class="flex-1 h-16 rounded-2xl bg-[#D86513] hover:bg-[#C45B10] transition text-white font-bold text-lg shadow-lg shadow-orange-200 disabled:opacity-50"
+                                {{ $produit->stock <= 0 ? 'disabled' : '' }}
+                            >
+                                Ajouter au panier
+                            </button>
+
+                            <a
+                                href="{{ route('produits.index') }}"
+                                class="h-16 px-8 rounded-2xl border border-[#E7DDD1] bg-white hover:border-[#D86513] hover:text-[#D86513] transition flex items-center justify-center font-semibold"
+                            >
+                                Continuer mes achats
+                            </a>
+                        </div>
+                    </form>
+                @else
+                    <div class="mt-10 rounded-2xl border border-[#E7DDD1] bg-white p-6">
+                        <p class="text-slate-600 mb-4">
+                            Connectez-vous pour ajouter ce produit à votre panier.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a
+                                href="{{ route('login', ['redirect' => url()->current()]) }}"
+                                class="h-14 px-8 rounded-2xl bg-[#D86513] hover:bg-[#C45B10] transition text-white font-bold flex items-center justify-center"
+                            >
+                                Se connecter
+                            </a>
+                            <a
+                                href="{{ route('register') }}"
+                                class="h-14 px-8 rounded-2xl border border-[#E7DDD1] hover:border-[#D86513] hover:text-[#D86513] transition flex items-center justify-center font-semibold"
+                            >
+                                Créer un compte
+                            </a>
+                        </div>
                     </div>
-                </form>
+                @endauth
 
                 @if($produit->vendeur)
                     <div class="mt-14 bg-white rounded-[32px] border border-[#EEE4D8] p-8">

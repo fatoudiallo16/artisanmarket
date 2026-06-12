@@ -35,8 +35,13 @@
                             <input
                                 type="text"
                                 name="name"
+                                value="{{ old('name') }}"
+                                required
                                 class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
                                 placeholder="Votre nom complet">
+                            @error('name')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                     </div>
@@ -49,21 +54,15 @@
                         <input
                             type="email"
                             name="email"
+                            value="{{ old('email') }}"
+                            required
                             class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
                             placeholder="email@example.com">
+                        @error('email')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium mb-2">
-                            Téléphone
-                        </label>
-
-                        <input
-                            type="text"
-                            name="phone"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-                            placeholder="+223 XX XX XX XX">
-                    </div>
 
                     <div
                         x-data="{ vendeur: false }">
@@ -144,8 +143,13 @@
                             <input
                                 :type="show ? 'text' : 'password'"
                                 name="password"
+                                required
+                                minlength="8"
                                 class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
                                 placeholder="********">
+                            @error('password')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
 
                             <button
                                 type="button"
@@ -158,18 +162,6 @@
 
                         </div>
 
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium mb-2">
-                            Confirmation du mot de passe
-                        </label>
-
-                        <input
-                            type="password"
-                            name="password_confirmation"
-                            class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-                            placeholder="********">
                     </div>
 
                     <div class="flex items-start gap-3">

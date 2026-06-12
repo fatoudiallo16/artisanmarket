@@ -47,6 +47,13 @@ Route::get('annonces/{annonce}', [AnnonceController::class, 'show'])->name('anno
 Route::middleware('auth')->group(function () {
     Route::get('me/profile', [ProfileController::class, 'show'])->name('me.profile');
 
+    Route::get('panier', [PanierController::class, 'index'])->name('panier.index');
+    Route::post('panier', [PanierController::class, 'store'])->name('panier.store');
+    Route::patch('panier/{produit}', [PanierController::class, 'update'])->name('panier.update');
+    Route::delete('panier/{produit}', [PanierController::class, 'destroy'])->name('panier.destroy');
+    Route::delete('panier', [PanierController::class, 'clear'])->name('panier.clear');
+    Route::post('panier/checkout', [PanierController::class, 'checkout'])->name('panier.checkout');
+
     /*
     |--------------------------------------------------------------------------
     | Client
@@ -59,13 +66,6 @@ Route::middleware('auth')->group(function () {
         Route::get('favoris', [FavorisController::class, 'index'])->name('favoris.index');
 
         Route::post('devenir-vendeur', [VendeurController::class, 'requestAccess'])->name('vendeur.request');
-
-        Route::get('panier', [PanierController::class, 'index'])->name('panier.index');
-        Route::post('panier', [PanierController::class, 'store'])->name('panier.store');
-        Route::patch('panier/{produit}', [PanierController::class, 'update'])->name('panier.update');
-        Route::delete('panier/{produit}', [PanierController::class, 'destroy'])->name('panier.destroy');
-        Route::delete('panier', [PanierController::class, 'clear'])->name('panier.clear');
-        Route::post('panier/checkout', [PanierController::class, 'checkout'])->name('panier.checkout');
 
         Route::resource('commandes', CommandeController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy'])

@@ -66,7 +66,7 @@ class ProduitController extends Controller
 
     public function show(Produit $produit): View
     {
-        $produit->load(['vendeur.profile', 'categorie']);
+        $produit->load(['vendeur.user', 'categorie']);
 
         $related = Produit::with(['vendeur', 'categorie'])
             ->where('categorie_id', $produit->categorie_id)
