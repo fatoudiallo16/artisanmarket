@@ -44,11 +44,15 @@ class VendeurController extends Controller
         ], 201);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request)
     {
         $vendeurs = Vendeur::with('user')->latest()->paginate(20);
 
-        return response()->json($vendeurs);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($vendeurs);
+        }
+
+        return view('admin.vendeurs.index', compact('vendeurs'));
     }
 
     public function show(Vendeur $vendeur): JsonResponse
@@ -58,7 +62,7 @@ class VendeurController extends Controller
         return response()->json($vendeur);
     }
 
-    public function update(Request $request, Vendeur $vendeur): JsonResponse
+    public function update(Request $request, Vendeur $vendeur)
     {
         $data = $request->validate([
             'statut' => ['sometimes', 'in:en_attente,approuve,suspendu,rejete'],
@@ -73,10 +77,14 @@ class VendeurController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Vendeur mis a jour.',
-            'vendeur' => $vendeur->fresh(['user']),
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Vendeur mis a jour.',
+                'vendeur' => $vendeur->fresh(['user']),
+            ]);
+        }
+
+        return back()->with('success', 'Statut du vendeur mis à jour.');
     }
 
     public function destroy(Vendeur $vendeur): JsonResponse

@@ -8,6 +8,6 @@ class ClientDashboardController extends Controller
 {
     public function index(): View
     {
-        return view('client.dashboard.dashboard');
+        return view('client.dashboard.index');
     }
 }

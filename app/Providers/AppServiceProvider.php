@@ -29,5 +29,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Commande::class, CommandePolicy::class);
         Gate::policy(Paiement::class, PaiementPolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
+
+        view()->composer('composants.navigation.NAVBAR', function ($view) {
+            if (auth()->check()) {
+                $cartService = app(\App\Services\CartService::class);
+                try {
+                    $view->with('cartCount', $cartService->getCartCount());
+                } catch (\Exception $e) {
+                    $view->with('cartCount', 0);
+                }
+            } else {
+                $view->with('cartCount', 0);
+            }
+        });
     }
 }

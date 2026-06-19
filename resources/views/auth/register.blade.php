@@ -164,6 +164,36 @@
 
                     </div>
 
+                    <div
+                        x-data="{ showConf:false }">
+
+                        <label class="block text-sm font-medium mb-2">
+                            Confirmer le mot de passe
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                :type="showConf ? 'text' : 'password'"
+                                name="password_confirmation"
+                                required
+                                minlength="8"
+                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                                placeholder="********">
+
+                            <button
+                                type="button"
+                                @click="showConf=!showConf"
+                                class="absolute right-4 top-3">
+
+                                👁️
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
                     <div class="flex items-start gap-3">
 
                         <input

@@ -84,13 +84,7 @@
 
                 @if(auth()->check())
 
-    <a href="{{ route('client.dashboard') }}">
-        Tableau de bord
-    </a>
-
-    <a href="{{ route('client.profile') }}">
-        Mon profil
-    </a>
+    
 
 @endif
 
@@ -210,12 +204,48 @@
 
                 @else
 
-                    <div class="flex items-center gap-3">
-
-                        <div class="w-11 h-11 rounded-full bg-[#D86513] text-white flex items-center justify-center font-bold">
+                    <div x-data="{ openProfile: false }" class="relative">
+                        <button
+                            type="button"
+                            @click="openProfile = !openProfile"
+                            class="w-11 h-11 rounded-full bg-[#D86513] text-white flex items-center justify-center font-bold"
+                            aria-haspopup="true"
+                            :aria-expanded="openProfile.toString()"
+                        >
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                        </div>
+                        </button>
 
+                        <div
+                            x-show="openProfile"
+                            @click.away="openProfile = false"
+                            x-transition.origin.top.right
+                            class="absolute right-0 mt-3 w-48 rounded-2xl bg-white border border-[#E7DDD1] shadow-lg text-sm z-20"
+                            style="display: none;"
+                        >
+                            <a
+                                href="{{ route('client.profile') }}"
+                                class="block px-4 py-3 text-slate-700 hover:bg-[#FAF7F2] transition"
+                            >
+                                Mon profil
+                            </a>
+                            @if(auth()->user()->hasRole('client'))
+                                <a
+                                    href="{{ route('client.dashboard') }}"
+                                    class="block px-4 py-3 text-slate-700 hover:bg-[#FAF7F2] transition"
+                                >
+                                    Tableau de bord
+                                </a>
+                            @endif
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="w-full text-left px-4 py-3 text-slate-700 hover:bg-[#FAF7F2] transition"
+                                >
+                                    Déconnexion
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                 @endguest
@@ -291,6 +321,30 @@
             <a href="{{ route('panier.index') }}" class="block font-medium text-slate-700">
                 Panier
             </a>
+
+            @guest
+                <a href="{{ route('login') }}" class="block font-medium text-slate-700">
+                    Connexion
+                </a>
+                <a href="{{ route('register') }}" class="block font-medium text-slate-700">
+                    S'inscrire
+                </a>
+            @else
+                <a href="{{ route('client.profile') }}" class="block font-medium text-slate-700">
+                    Mon profil
+                </a>
+                @if(auth()->user()->hasRole('client'))
+                    <a href="{{ route('client.dashboard') }}" class="block font-medium text-slate-700">
+                        Tableau de bord
+                    </a>
+                @endif
+                <form method="POST" action="{{ route('logout') }}" class="block">
+                    @csrf
+                    <button type="submit" class="w-full text-left font-medium text-slate-700 hover:text-[#D86513]">
+                        Déconnexion
+                    </button>
+                </form>
+            @endguest
 
         </div>
 

@@ -22,7 +22,7 @@
             </div>
 
             <a
-                href="#"
+                href="{{ route('produits.index') }}"
                 class="hidden md:flex items-center gap-2 text-[#D86513] font-semibold hover:gap-3 transition-all"
             >
                 Voir tout →
@@ -32,35 +32,31 @@
 
         {{-- GRID --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-
-            {{-- MODE --}}
-            @include('composants.cartes.carte-categories', [
-                'title' => 'Mode',
-                'description' => 'Vêtements, sacs et créations textiles artisanales.',
-                'image' => asset('images/categories/mode.jpg')
-            ])
-
-            {{-- DECORATION --}}
-            @include('composants.cartes.carte-categories', [
-                'title' => 'Décoration',
-                'description' => 'Objets artisanaux et décorations authentiques.',
-                'image' => asset('images/categories/deco.jpg')
-            ])
-
-            {{-- BIJOUX --}}
-            @include('composants.cartes.carte-categories', [
-                'title' => 'Bijoux',
-                'description' => 'Bijoux africains modernes et faits main.',
-                'image' => asset('images/categories/bijoux.jpg')
-            ])
-
-            {{-- POTERIE --}}
-            @include('composants.cartes.carte-categories', [
-                'title' => 'Poterie',
-                'description' => 'Poteries et créations en terre cuite artisanales.',
-                'image' => asset('images/categories/poterie.jpg')
-            ])
-
+            @forelse($categories as $category)
+                @php
+                    $categoryName = $category->{$categoryColumn} ?? $category->name ?? 'Catégorie';
+                    $slug = strtolower(\Illuminate\Support\Str::slug($categoryName));
+                    $assetMap = [
+                        'mode' => 'mode.jpg',
+                        'decoration' => 'deco.jpg',
+                        'decorations' => 'deco.jpg',
+                        'bijoux' => 'bijoux.jpg',
+                        'poterie' => 'poterie.jpg',
+                    ];
+                    $mappedImage = $assetMap[$slug] ?? 'deco.jpg';
+                    $imageUrl = $category->image ? asset('storage/' . $category->image) : asset('images/categories/' . $mappedImage);
+                @endphp
+                @include('composants.cartes.carte-categories', [
+                    'title' => ucfirst($categoryName),
+                    'description' => $category->description ?? 'Découvrez notre collection d\'articles artisanaux.',
+                    'image' => $imageUrl,
+                    'url' => route('produits.index', ['categorie' => $categoryName])
+                ])
+            @empty
+                <div class="col-span-full text-center py-12 text-slate-400">
+                    Aucune catégorie disponible.
+                </div>
+            @endforelse
         </div>
 
     </div>

@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request)
     {
-        return response()->json(
-            User::with('role')->latest()->paginate(20)
-        );
+        $users = User::with('role')->latest()->paginate(20);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($users);
+        }
+
+        return view('admin.utilisateurs.index', compact('users'));
     }
 }

@@ -1,5 +1,5 @@
 <a
-    href="#"
+    href="{{ $url ?? '#' }}"
     class="group block bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-2xl transition duration-500"
 >
 

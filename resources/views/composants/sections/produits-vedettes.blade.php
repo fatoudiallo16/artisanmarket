@@ -22,7 +22,7 @@
             </div>
 
             <a
-                href="#"
+                href="{{ route('produits.index') }}"
                 class="hidden md:flex items-center gap-2 text-[#D86513] font-semibold hover:gap-3 transition-all"
             >
                 Voir tout →
@@ -32,47 +32,24 @@
 
         {{-- GRID --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-
-            {{-- PRODUCT --}}
-            @include('composants.cartes.carte-produits', [
-                'title' => 'Sac artisanal premium',
-                'description' => 'Sac confectionné à la main avec des matériaux locaux.',
-                'price' => '18 000 FCFA',
-                'category' => 'Mode',
-                'badge' => 'Nouveau',
-                'image' => asset('images/produits/sac.jpg')
-            ])
-
-            {{-- PRODUCT --}}
-            @include('composants.cartes.carte-produits', [
-                'title' => 'Panier tressé africain',
-                'description' => 'Panier décoratif fait main par des artisans locaux.',
-                'price' => '12 000 FCFA',
-                'category' => 'Décoration',
-                'badge' => 'Best Seller',
-                'image' => asset('images/produits/panier.jpg')
-            ])
-
-            {{-- PRODUCT --}}
-            @include('composants.cartes.carte-produits', [
-                'title' => 'Bijou artisanal',
-                'description' => 'Bijou moderne inspiré de l’art africain traditionnel.',
-                'price' => '9 500 FCFA',
-                'category' => 'Bijoux',
-                'badge' => 'Populaire',
-                'image' => asset('images/produits/bijou.jpg')
-            ])
-
-            {{-- PRODUCT --}}
-            @include('composants.cartes.carte-produits', [
-                'title' => 'Poterie artisanale',
-                'description' => 'Création en terre cuite réalisée à la main.',
-                'price' => '15 000 FCFA',
-                'category' => 'Poterie',
-                'badge' => 'Authentique',
-                'image' => asset('images/produits/poterie.jpg')
-            ])
-
+            @forelse($produitsEnVedette as $item)
+                @php
+                    $categoryName = $item->categorie?->{$categoryColumn} ?? $item->categorie?->name ?? 'Artisanat';
+                @endphp
+                @include('composants.cartes.carte-produits', [
+                    'title' => $item->nom,
+                    'description' => \Illuminate\Support\Str::limit($item->description, 90),
+                    'price' => number_format((float) $item->prix, 0, ' ', ' ') . ' FCFA',
+                    'category' => ucfirst($categoryName),
+                    'badge' => $item->stock > 0 ? 'Disponible' : 'Rupture',
+                    'image' => $item->image_url,
+                    'url' => route('produits.show', $item),
+                ])
+            @empty
+                <div class="col-span-full text-center py-12 text-slate-400">
+                    Aucun produit disponible.
+                </div>
+            @endforelse
         </div>
 
     </div>
