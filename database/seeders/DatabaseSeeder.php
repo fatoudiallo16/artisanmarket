@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => 'admin@artisanmarket.test'],
                 [
                     'name' => 'Admin',
-                    'password' => Hash::make('Admin@12345'),
+                    'password' => 'Admin@12345',
                     'role_id' => $adminRole->id,
                 ]
             );

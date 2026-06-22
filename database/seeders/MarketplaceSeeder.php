@@ -37,7 +37,7 @@ class MarketplaceSeeder extends Seeder
                 ['email' => 'client@artisanmarket.test'],
                 [
                     'name' => 'Awa Diallo',
-                    'password' => Hash::make('Client@12345'),
+                    'password' => 'Client@12345',
                     'role_id' => $clientRole->id,
                 ]
             );
@@ -81,7 +81,7 @@ class MarketplaceSeeder extends Seeder
                     ['email' => $data['email']],
                     [
                         'name' => $data['name'],
-                        'password' => Hash::make('Vendeur@12345'),
+                        'password' => 'Vendeur@12345',
                         'role_id' => $vendeurRole->id,
                     ]
                 );
