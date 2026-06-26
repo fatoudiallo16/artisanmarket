@@ -27,7 +27,11 @@
                 <option value="">Toutes les categories</option>
                 @foreach($categories as $category)
                     @php($categoryName = $category->{$categoryColumn} ?? $category->name ?? 'Categorie')
-                    <option value="{{ $category->id }}" {{ (string) request('categorie', request('category')) === (string) $category->id ? 'selected' : '' }}>
+                    <option value="{{ $category->id }}" {{ 
+                        (string) request('categorie') === (string) $category->id || 
+                        strtolower(request('categorie')) === strtolower($categoryName) 
+                        ? 'selected' : '' 
+                    }}>
                         {{ ucfirst($categoryName) }}
                     </option>
                 @endforeach

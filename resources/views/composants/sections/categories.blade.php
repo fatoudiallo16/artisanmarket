@@ -36,15 +36,24 @@
                 @php
                     $categoryName = $category->{$categoryColumn} ?? $category->name ?? 'Catégorie';
                     $slug = strtolower(\Illuminate\Support\Str::slug($categoryName));
-                    $assetMap = [
-                        'mode' => 'mode.jpg',
-                        'decoration' => 'deco.jpg',
-                        'decorations' => 'deco.jpg',
-                        'bijoux' => 'bijoux.jpg',
-                        'poterie' => 'poterie.jpg',
+                    $unsplashMap = [
+                        'bijoux' => 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=600&auto=format&fit=crop',
+                        'tissus' => 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop',
+                        'poterie' => 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop',
+                        'pot-en-terre-cuite' => 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop',
+                        'sculpture-bois' => 'https://images.unsplash.com/photo-1606744824163-985d376605aa?q=80&w=600&auto=format&fit=crop',
+                        'cuir' => 'https://images.unsplash.com/photo-1524289286702-f07229da36f5?q=80&w=600&auto=format&fit=crop',
+                        'instruments' => 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=600&auto=format&fit=crop',
+                        'maroquinerie' => 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=600&auto=format&fit=crop',
+                        'art-mural' => 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=600&auto=format&fit=crop',
+                        'vannerie' => 'https://images.unsplash.com/photo-1595181980833-28b7e28b8431?q=80&w=600&auto=format&fit=crop',
+                        'cosmetiques' => 'https://images.unsplash.com/photo-1608248597481-496100c80836?q=80&w=600&auto=format&fit=crop',
+                        'mode' => 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=600&auto=format&fit=crop',
+                        'decoration' => 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=600&auto=format&fit=crop',
                     ];
-                    $mappedImage = $assetMap[$slug] ?? 'deco.jpg';
-                    $imageUrl = $category->image ? asset('storage/' . $category->image) : asset('images/categories/' . $mappedImage);
+                    $imageUrl = $category->image 
+                        ? asset('storage/' . $category->image) 
+                        : ($unsplashMap[$slug] ?? 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=600');
                 @endphp
                 @include('composants.cartes.carte-categories', [
                     'title' => ucfirst($categoryName),

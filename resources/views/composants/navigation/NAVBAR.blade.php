@@ -75,13 +75,6 @@
                     Produits
                 </a>
 
-                <a
-                    href="{{ route('produits.index') }}"
-                    class="text-slate-700 hover:text-[#D86513] transition font-medium"
-                >
-                    Catégories
-                </a>
-
                 @if(auth()->check())
 
     
@@ -126,33 +119,7 @@
                     </button>
 
                 </div>
-
-                {{-- FAVORIS --}}
-                <a
-                    href="{{ route('favoris.index') }}"
-                    class="relative text-slate-700 hover:text-[#D86513] transition"
-                >
-
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-7 h-7"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                    </svg>
-
-                    <span class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#D86513] text-white text-[10px] flex items-center justify-center">
-                        3
-                    </span>
-
-                </a>
+              
 
                 {{-- PANIER --}}
                 <a

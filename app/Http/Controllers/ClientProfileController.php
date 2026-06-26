@@ -10,7 +10,7 @@ class ClientProfileController extends Controller
     public function show(): View
     {
         $user = Auth::user();
-        $user->loadMissing('role', 'clientProfile');
+        $user->loadMissing('role', 'clientProfile', 'vendeurProfile', 'adminProfile');
 
         return view('client.profil.edit', compact('user'));
     }

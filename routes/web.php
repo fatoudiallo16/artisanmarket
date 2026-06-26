@@ -46,6 +46,8 @@ Route::get('annonces/{annonce}', [AnnonceController::class, 'show'])->name('anno
 */
 Route::middleware('auth')->group(function () {
     Route::get('me/profile', [ProfileController::class, 'show'])->name('me.profile');
+    Route::get('profil', [ClientProfileController::class, 'show'])->name('client.profile');
+    Route::delete('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('panier', [PanierController::class, 'index'])->name('panier.index');
     Route::post('panier', [PanierController::class, 'store'])->name('panier.store');
@@ -61,7 +63,6 @@ Route::middleware('auth')->group(function () {
     */
     Route::middleware('role:client')->group(function () {
         Route::get('client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
-        Route::get('client/profil', [ClientProfileController::class, 'show'])->name('client.profile');
 
         Route::get('favoris', [FavorisController::class, 'index'])->name('favoris.index');
 

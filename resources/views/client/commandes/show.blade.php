@@ -254,7 +254,15 @@
                     @endif
 
                     {{-- Actions bottom --}}
-                    @if($canCancel && Auth::user()->can('delete', $commande))
+                    @if(request()->routeIs('admin.*'))
+                        <form method="POST" action="{{ route('admin.commandes.destroy', $commande) }}" class="mb-4" onsubmit="return confirm('Supprimer cette commande définitivement ? Cette action est irréversible.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full h-11 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 font-bold text-xs transition duration-200">
+                                Supprimer la commande (Admin)
+                            </button>
+                        </form>
+                    @elseif($canCancel && Auth::user()->can('delete', $commande))
                         <form method="POST" action="{{ route($commandeRoutePrefix . 'destroy', $commande) }}" class="mb-4" onsubmit="return confirm('Annuler cette commande définitivement ?');">
                             @csrf
                             @method('DELETE')

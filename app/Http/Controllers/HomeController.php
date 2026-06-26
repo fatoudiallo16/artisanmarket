@@ -57,6 +57,42 @@ class HomeController extends Controller
             $vendeur = $user->vendeur;
             $produits = $vendeur ? $vendeur->produits()->with('categorie')->latest()->get() : collect();
 
+            $salesCount = 0;
+            $productsSold = 0;
+            $revenue = 0;
+            $recentSales = collect();
+
+            if ($vendeur) {
+                // Get all paid orders containing products of this seller
+                $salesCount = \App\Models\Commande::where('statut', 'payee')
+                    ->whereHas('lignecommandes.produit', function ($q) use ($vendeur) {
+                        $q->where('vendeur_id', $vendeur->id);
+                    })->count();
+
+                // Sum of quantities of products sold in paid orders
+                $productsSold = (int) \App\Models\Lignecommande::whereHas('commande', function ($q) {
+                    $q->where('statut', 'payee');
+                })->whereHas('produit', function ($q) use ($vendeur) {
+                    $q->where('vendeur_id', $vendeur->id);
+                })->sum('quantite');
+
+                // Sum of revenue (quantite * prix_unitaire) in paid orders
+                $revenue = (float) \App\Models\Lignecommande::whereHas('commande', function ($q) {
+                    $q->where('statut', 'payee');
+                })->whereHas('produit', function ($q) use ($vendeur) {
+                    $q->where('vendeur_id', $vendeur->id);
+                })->sum(\Illuminate\Support\Facades\DB::raw('quantite * prix_unitaire'));
+
+                // Get recent sales (order lines)
+                $recentSales = \App\Models\Lignecommande::with(['commande.user', 'produit'])
+                    ->whereHas('produit', function ($q) use ($vendeur) {
+                        $q->where('vendeur_id', $vendeur->id);
+                    })
+                    ->latest()
+                    ->limit(10)
+                    ->get();
+            }
+
             return view('vendeur.dashboard.index', [
                 'vendeur' => $vendeur,
                 'produits' => $produits,
@@ -65,7 +101,10 @@ class HomeController extends Controller
                 'pendingProducts' => $produits->where('status', 'pending')->count(),
                 'recentProducts' => $produits->take(5),
                 'categoriesCount' => $vendeur ? $vendeur->produits()->distinct('categorie_id')->count('categorie_id') : 0,
-                'revenue' => 0,
+                'salesCount' => $salesCount,
+                'productsSold' => $productsSold,
+                'revenue' => $revenue,
+                'recentSales' => $recentSales,
             ]);
         }
 

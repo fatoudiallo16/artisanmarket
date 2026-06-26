@@ -118,7 +118,7 @@
                                 </label>
 
                                 <a
-                                    href="#"
+                                    href="{{ route('password.request') }}"
                                     class="text-sm text-amber-600 hover:underline">
 
                                     Mot de passe oublié ?

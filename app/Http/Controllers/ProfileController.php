@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
@@ -29,5 +31,21 @@ class ProfileController extends Controller
             'profile' => $profile,
             'vendeur_request' => $user->vendeur,
         ]);
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        Auth::logout();
+
+        if ($user) {
+            $user->delete();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('welcome')->with('success', 'Votre compte a été supprimé avec succès.');
     }
 }

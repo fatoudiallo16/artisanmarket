@@ -113,6 +113,23 @@
 
                 </div>
 
+                <!-- Zone de danger (Suppression de compte) -->
+                <div class="mt-12 border-t border-rose-100 pt-8">
+                    <h3 class="text-lg font-bold text-rose-700 mb-2 flex items-center gap-2">
+                        ⚠️ Zone de danger
+                    </h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+                        Si vous supprimez votre compte, toutes vos informations personnelles, vos produits mis en vente (si vous êtes vendeur) et vos commandes associées seront définitivement supprimés de la plateforme. Cette action est irréversible.
+                    </p>
+                    <form method="POST" action="{{ route('profile.destroy') }}" onsubmit="return confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte définitivement ? Cette action est irréversible.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm hover:shadow transition duration-200">
+                            Supprimer mon compte
+                        </button>
+                    </form>
+                </div>
+
             </div>
 
         </div>

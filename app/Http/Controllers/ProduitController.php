@@ -67,7 +67,11 @@ class ProduitController extends Controller
         };
 
         $produits = $query->paginate(12)->withQueryString();
-        $categories = Categorie::withCount('produits')->get();
+        $categories = Categorie::query()
+            ->withCount('produits')
+            ->orderByDesc('produits_count')
+            ->limit(7)
+            ->get();
 
         return view('public.produits.index', compact('produits', 'categories', 'categoryColumn'));
     }

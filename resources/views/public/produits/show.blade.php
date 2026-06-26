@@ -45,22 +45,6 @@
                         </svg>
                     </button>
                 </div>
-
-                <!-- Galerie / Vignettes simulées -->
-                <div class="grid grid-cols-4 gap-3 mt-4">
-                    <div class="border-2 border-[#D86513] rounded-xl overflow-hidden cursor-pointer aspect-square bg-white flex items-center justify-center p-1">
-                        <img src="{{ $produit->image_url }}" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                    <div class="border border-[#EEE4D8] opacity-60 hover:opacity-100 transition rounded-xl overflow-hidden cursor-pointer aspect-square bg-white flex items-center justify-center p-1">
-                        <img src="{{ $produit->image_url }}" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                    <div class="border border-[#EEE4D8] opacity-60 hover:opacity-100 transition rounded-xl overflow-hidden cursor-pointer aspect-square bg-white flex items-center justify-center p-1">
-                        <img src="{{ $produit->image_url }}" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                    <div class="border border-[#EEE4D8] opacity-60 hover:opacity-100 transition rounded-xl overflow-hidden cursor-pointer aspect-square bg-white flex items-center justify-center p-1">
-                        <img src="{{ $produit->image_url }}" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                </div>
             </div>
 
             <!-- COLONNE 2 : INFOS PRODUIT (lg:col-span-4) -->

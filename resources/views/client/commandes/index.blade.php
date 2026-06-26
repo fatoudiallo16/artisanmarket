@@ -129,10 +129,19 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="py-4 px-6 text-right">
+                                    <td class="py-4 px-6 text-right flex items-center justify-end gap-2">
                                         <a href="{{ route($commandeRoutePrefix . 'show', $commande) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-[#E7DDD1] hover:border-[#D86513] hover:bg-[#D86513]/5 text-slate-700 hover:text-[#D86513] font-bold text-xs transition duration-200">
                                             Détails
                                         </a>
+                                        @if(request()->routeIs('admin.*'))
+                                            <form method="POST" action="{{ route('admin.commandes.destroy', $commande) }}" class="inline" onsubmit="return confirm('Supprimer cette commande définitivement ? Cette action est irréversible.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition duration-200">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
