@@ -47,7 +47,7 @@ Route::get('annonces/{annonce}', [AnnonceController::class, 'show'])->name('anno
 | Routes authentifiées
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('me/profile', [ProfileController::class, 'show'])->name('me.profile');
     Route::get('profil', [ClientProfileController::class, 'show'])->name('client.profile');
     Route::delete('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');
