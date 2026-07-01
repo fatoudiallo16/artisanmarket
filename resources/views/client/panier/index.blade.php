@@ -81,7 +81,7 @@
                                                             {{ $produit->nom }}
                                                         </a>
                                                         <span class="text-xs text-slate-400 mt-1 block">
-                                                            {{ $produit->categorie?->nom ?? $produit->categorie?->nom_categorie ?? 'Artisanat local' }}
+                                                            {{ $produit->categorie?->name ?? 'Artisanat local' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -149,7 +149,7 @@
                                                 </form>
                                             </div>
                                             <span class="text-xs text-slate-400 block -mt-1 mb-2">
-                                                {{ $produit->categorie?->nom ?? $produit->categorie?->nom_categorie ?? 'Artisanat local' }}
+                                                {{ $produit->categorie?->name ?? 'Artisanat local' }}
                                             </span>
                                             <div class="flex items-center justify-between mt-2">
                                                 <form method="POST" action="{{ route('panier.update', $article->produit_id) }}">

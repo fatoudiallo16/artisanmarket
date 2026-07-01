@@ -58,12 +58,7 @@
                         Explorer les produits
                     </a>
 
-                    <a
-                        href="#"
-                        class="h-14 px-8 rounded-2xl border border-[#DDD2C5] bg-white hover:border-[#D86513] hover:text-[#D86513] transition font-semibold flex items-center justify-center"
-                    >
-                        Devenir vendeur
-                    </a>
+
 
                 </div>
 

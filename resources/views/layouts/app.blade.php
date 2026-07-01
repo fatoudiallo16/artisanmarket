@@ -11,8 +11,20 @@
     >
 
     <title>
-        @yield('title', 'ArtisanMarket')
+        @yield('title', 'ArtisanMarket — Marketplace artisanale du Mali')
     </title>
+
+    <meta name="description" content="@yield('meta_description', 'Découvrez des créations artisanales uniques du Mali : bijoux, tissus bogolan, poterie, sculptures bois et plus. Soutenez nos artisans talentueux.')">
+    <meta name="keywords" content="artisanat, Mali, bogolan, bijoux, poterie, sculpture, tissus, marketplace, fait main">
+
+    {{-- Open Graph --}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'ArtisanMarket — Marketplace artisanale du Mali')">
+    <meta property="og:description" content="@yield('meta_description', 'Découvrez des créations artisanales uniques du Mali. Soutenez nos artisans talentueux.')">
+    <meta property="og:site_name" content="ArtisanMarket">
+    <meta property="og:locale" content="fr_FR">
+
+    <link rel="canonical" href="{{ url()->current() }}">
 
     @vite([
         'resources/css/app.css',

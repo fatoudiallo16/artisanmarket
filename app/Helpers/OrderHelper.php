@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Enums\OrderStatus;
+
 class OrderHelper
 {
     /**
@@ -9,22 +11,17 @@ class OrderHelper
      */
     public static function formatStatus(string $statut): string
     {
-        $statuses = [
-            'en_attente' => 'En attente',
-            'en_cours' => 'En cours',
-            'payee' => 'Payée',
-            'annulee' => 'Annulée',
-        ];
+        $enum = OrderStatus::tryFrom($statut);
 
-        return $statuses[$statut] ?? $statut;
+        return $enum ? $enum->label() : $statut;
     }
 
     /**
-     * Formater le montant en devise
+     * Formater le montant en devise (FCFA)
      */
     public static function formatAmount(float $amount): string
     {
-        return number_format($amount, 2, ',', ' ') . ' €';
+        return number_format($amount, 0, ',', ' ') . ' FCFA';
     }
 
     /**
@@ -32,8 +29,8 @@ class OrderHelper
      */
     public static function calculateShipping(float $amount): float
     {
-        // 5% de frais ou minimum 5€
-        return max($amount * 0.05, 5);
+        // 5% de frais ou minimum 500 FCFA
+        return max($amount * 0.05, 500);
     }
 
     /**
@@ -41,6 +38,8 @@ class OrderHelper
      */
     public static function canCancel(string $statut): bool
     {
-        return in_array($statut, ['en_attente', 'en_cours']);
+        $enum = OrderStatus::tryFrom($statut);
+
+        return $enum !== null && in_array($enum, [OrderStatus::PENDING, OrderStatus::IN_PROGRESS], true);
     }
 }

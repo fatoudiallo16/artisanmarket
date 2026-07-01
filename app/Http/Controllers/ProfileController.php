@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -35,13 +36,21 @@ class ProfileController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
         $user = Auth::user();
+
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+            return back()->withErrors([
+                'password' => 'Le mot de passe est incorrect.',
+            ]);
+        }
 
         Auth::logout();
 
-        if ($user) {
-            $user->delete();
-        }
+        $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

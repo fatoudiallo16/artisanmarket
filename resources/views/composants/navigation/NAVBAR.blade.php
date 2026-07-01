@@ -87,15 +87,18 @@
             <div class="hidden lg:flex items-center gap-5 flex-1 justify-end">
 
                 {{-- SEARCH --}}
-                <div class="relative max-w-md w-full">
+                <form method="GET" action="{{ route('produits.index') }}" class="relative max-w-md w-full">
 
                     <input
                         type="text"
+                        name="q"
+                        value="{{ request('q') }}"
                         placeholder="Rechercher un produit, un artisan..."
                         class="w-full h-12 rounded-2xl border border-[#E7DDD1] bg-[#FAF7F2] pl-5 pr-14 text-sm outline-none focus:ring-2 focus:ring-[#D86513] focus:border-[#D86513]"
                     >
 
                     <button
+                        type="submit"
                         class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#D86513]"
                     >
 
@@ -118,8 +121,37 @@
 
                     </button>
 
-                </div>
+                </form>
               
+                {{-- FAVORIS --}}
+                <a
+                    href="{{ route('favoris.index') }}"
+                    class="relative text-slate-700 hover:text-[#D86513] transition"
+                    title="Mes favoris"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-7 h-7"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                    </svg>
+
+                    @auth
+                        @if(auth()->user()->favoris()->count() > 0)
+                            <span class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#D86513] text-white text-[10px] flex items-center justify-center">
+                                {{ auth()->user()->favoris()->count() }}
+                            </span>
+                        @endif
+                    @endauth
+                </a>
 
                 {{-- PANIER --}}
                 <a
@@ -255,11 +287,15 @@
 
         <div class="px-4 py-6 space-y-5">
 
-            <input
-                type="text"
-                placeholder="Rechercher..."
-                class="w-full h-12 rounded-2xl border border-[#E7DDD1] bg-[#FAF7F2] px-4 outline-none"
-            >
+            <form method="GET" action="{{ route('produits.index') }}">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Rechercher..."
+                    class="w-full h-12 rounded-2xl border border-[#E7DDD1] bg-[#FAF7F2] px-4 outline-none"
+                >
+            </form>
 
             <a href="{{ route('welcome') }}" class="block font-medium text-[#D86513]">
                 Accueil
@@ -281,8 +317,15 @@
                 Annonces
             </a>
 
-            <a href="{{ route('favoris.index') }}" class="block font-medium text-slate-700">
-                Favoris
+            <a href="{{ route('favoris.index') }}" class="block font-medium text-slate-700 flex items-center justify-between">
+                <span>Favoris</span>
+                @auth
+                    @if(auth()->user()->favoris()->count() > 0)
+                        <span class="w-5 h-5 rounded-full bg-[#D86513] text-white text-[10px] flex items-center justify-center">
+                            {{ auth()->user()->favoris()->count() }}
+                        </span>
+                    @endif
+                @endauth
             </a>
 
             <a href="{{ route('panier.index') }}" class="block font-medium text-slate-700">

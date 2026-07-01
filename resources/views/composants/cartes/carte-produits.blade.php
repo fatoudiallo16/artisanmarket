@@ -3,6 +3,14 @@
     class="group block bg-white rounded-[32px] overflow-hidden border border-[#EEE4D8] hover:shadow-2xl transition duration-500"
 >
 
+    @php
+        $productId = $id ?? $produit_id ?? null;
+        $isFavorited = false;
+        if ($productId && Auth::check()) {
+            $isFavorited = Auth::user()->favoris()->where('produit_id', $productId)->exists();
+        }
+    @endphp
+
     {{-- IMAGE --}}
     <div class="relative overflow-hidden">
 
@@ -11,6 +19,35 @@
             alt="{{ $title }}"
             class="w-full h-72 object-cover group-hover:scale-110 transition duration-700"
         >
+
+        {{-- HEART BUTTON (FAVORIS) --}}
+        @if($productId)
+            <div class="absolute top-4 right-4 z-10">
+                <form method="POST" action="{{ route('favoris.toggle', $productId) }}" onsubmit="event.stopPropagation();">
+                    @csrf
+                    <button
+                        type="submit"
+                        onclick="event.stopPropagation();"
+                        class="w-10 h-10 rounded-full bg-white/95 backdrop-blur hover:bg-white text-slate-800 shadow-md hover:scale-110 transition flex items-center justify-center"
+                        title="{{ $isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5 {{ $isFavorited ? 'text-red-500 fill-red-500' : 'text-slate-500 fill-none' }} transition-colors duration-200"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        @endif
 
         {{-- BADGE --}}
         @if(isset($badge))

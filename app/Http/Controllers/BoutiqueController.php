@@ -14,10 +14,11 @@ class BoutiqueController extends Controller
 
         $produits = Produit::query()
             ->where('vendeur_id', $vendeur->id)
+            ->where('status', 'approved')
             ->where('stock', '>', 0)
             ->with('categorie')
             ->latest()
-            ->get();
+            ->paginate(12);
 
         return view('public.boutiques.show', compact('vendeur', 'produits'));
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\VendeurStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
@@ -80,18 +81,6 @@ class RegisterController extends Controller
             // Le profil peut être créé plus tard si la migration n'est pas encore passée.
         }
 
-        if (($data['account_type'] ?? 'client') === 'seller') {
-            Vendeur::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'id_utilisateur' => $user->id,
-                    'name' => $user->name,
-                    'nom_boutique' => 'Boutique '.$user->name,
-                    'statut' => 'en_attente',
-                ]
-            );
-        }
-
         return $user;
     }
 
@@ -108,12 +97,5 @@ class RegisterController extends Controller
         }
 
         return route('client.dashboard');
-    }
-
-    protected function registered(Request $request, $user)
-    {
-        if (($request->input('account_type') ?? 'client') === 'seller') {
-            session()->flash('success', 'Compte créé. Votre demande vendeur est en attente de validation.');
-        }
     }
 }

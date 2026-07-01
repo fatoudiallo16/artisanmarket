@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Categorie extends Model
@@ -22,7 +21,7 @@ class Categorie extends Model
     protected static function booted(): void
     {
         static::creating(function (Categorie $categorie) {
-            if (Schema::hasColumn($categorie->getTable(), 'slug') && blank($categorie->slug)) {
+            if (blank($categorie->slug)) {
                 $categorie->slug = static::uniqueSlug($categorie->name ?? 'categorie');
             }
         });

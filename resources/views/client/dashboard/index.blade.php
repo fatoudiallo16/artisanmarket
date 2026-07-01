@@ -30,7 +30,7 @@
                 </h3>
 
                 <p class="text-3xl font-bold mt-2">
-                    0
+                    {{ $commandesCount }}
                 </p>
 
             </div>
@@ -42,7 +42,7 @@
                 </h3>
 
                 <p class="text-3xl font-bold mt-2">
-                    0
+                    {{ $cartCount }}
                 </p>
 
             </div>
@@ -54,7 +54,7 @@
                 </h3>
 
                 <p class="text-3xl font-bold mt-2 text-amber-600">
-                    0 FCFA
+                    {{ App\Helpers\OrderHelper::formatAmount($totalDepense) }}
                 </p>
 
             </div>
@@ -71,21 +71,21 @@
 
             <div class="grid md:grid-cols-3 gap-4">
 
-                <a href="#"
+                <a href="{{ route('produits.index') }}"
                    class="p-4 border rounded-xl hover:bg-amber-50 transition">
 
                     🛍️ Parcourir les produits
 
                 </a>
 
-                <a href="#"
+                <a href="{{ route('panier.index') }}"
                    class="p-4 border rounded-xl hover:bg-amber-50 transition">
 
                     🛒 Voir mon panier
 
                 </a>
 
-                <a href="#"
+                <a href="{{ route('commandes.index') }}"
                    class="p-4 border rounded-xl hover:bg-amber-50 transition">
 
                     📦 Mes commandes
@@ -106,7 +106,7 @@
                     Dernières commandes
                 </h2>
 
-                <a href="#"
+                <a href="{{ route('commandes.index') }}"
                    class="text-amber-600 font-medium">
 
                     Voir tout
@@ -143,18 +143,35 @@
                     </thead>
 
                     <tbody>
-
-                        <tr>
-
-                            <td colspan="4"
-                                class="text-center py-8 text-gray-500">
-
-                                Aucune commande pour le moment.
-
-                            </td>
-
-                        </tr>
-
+                        @forelse($recentCommandes as $commande)
+                            <tr class="border-b last:border-0 hover:bg-gray-50">
+                                <td class="py-4">
+                                    <a href="{{ route('commandes.show', $commande) }}" class="text-amber-600 font-medium hover:underline">
+                                        #CMD-{{ str_pad($commande->id, 5, '0', STR_PAD_LEFT) }}
+                                    </a>
+                                </td>
+                                <td class="py-4 text-gray-500">
+                                    {{ $commande->created_at->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="py-4 font-medium">
+                                    @php
+                                        $total = $commande->lignecommandes->sum(fn($l) => $l->quantite * $l->prix_unitaire);
+                                    @endphp
+                                    {{ App\Helpers\OrderHelper::formatAmount($total) }}
+                                </td>
+                                <td class="py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                        {{ App\Helpers\OrderHelper::formatStatus($commande->statut->value) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-gray-500">
+                                    Aucune commande pour le moment.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
 
                 </table>

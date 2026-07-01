@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AnnonceController;
+use App\Http\Controllers\AvisController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ClientDashboardController;
@@ -14,7 +15,9 @@ use App\Http\Controllers\PanierController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\VendeurController;
+use App\Http\Controllers\VendeurDashboardController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -44,17 +47,21 @@ Route::get('annonces/{annonce}', [AnnonceController::class, 'show'])->name('anno
 | Routes authentifiées
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('me/profile', [ProfileController::class, 'show'])->name('me.profile');
     Route::get('profil', [ClientProfileController::class, 'show'])->name('client.profile');
     Route::delete('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('panier', [PanierController::class, 'index'])->name('panier.index');
-    Route::post('panier', [PanierController::class, 'store'])->name('panier.store');
+    Route::post('panier', [PanierController::class, 'store'])->name('panier.store')->middleware('throttle:10,1');
     Route::patch('panier/{produit}', [PanierController::class, 'update'])->name('panier.update');
     Route::delete('panier/{produit}', [PanierController::class, 'destroy'])->name('panier.destroy');
     Route::delete('panier', [PanierController::class, 'clear'])->name('panier.clear');
-    Route::post('panier/checkout', [PanierController::class, 'checkout'])->name('panier.checkout');
+    Route::post('panier/checkout', [PanierController::class, 'checkout'])->name('panier.checkout')->middleware('throttle:6,1');
+
+    Route::post('favoris/toggle/{produit}', [FavorisController::class, 'toggle'])->name('favoris.toggle');
+    Route::get('favoris', [FavorisController::class, 'index'])->name('favoris.index');
+    Route::post('produits/{produit}/avis', [AvisController::class, 'store'])->name('produits.avis.store');
 
     /*
     |--------------------------------------------------------------------------
@@ -64,9 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:client')->group(function () {
         Route::get('client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
 
-        Route::get('favoris', [FavorisController::class, 'index'])->name('favoris.index');
-
-        Route::post('devenir-vendeur', [VendeurController::class, 'requestAccess'])->name('vendeur.request');
+        Route::post('devenir-vendeur', [VendeurController::class, 'requestAccess'])->name('vendeur.request')->middleware('throttle:6,1');
 
         Route::resource('commandes', CommandeController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy'])
@@ -76,7 +81,7 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'show', 'store', 'update', 'destroy'])
             ->names('paiements');
 
-        Route::post('paiements/{paiement}/pay', [PaiementController::class, 'pay'])->name('paiements.pay');
+        Route::post('paiements/{paiement}/pay', [PaiementController::class, 'pay'])->name('paiements.pay')->middleware('throttle:6,1');
         Route::get('paiements/{paiement}/invoice', [PaiementController::class, 'invoice'])->name('paiements.invoice');
     });
 
@@ -86,7 +91,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('role:vendeur')->prefix('vendeur')->name('vendeur.')->group(function () {
-        Route::get('dashboard', [HomeController::class, 'index'])->name('dashboard');
+        Route::get('dashboard', [VendeurDashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('produits', ProduitController::class);
     });
@@ -97,7 +102,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('categories', CategorieController::class);
 
@@ -115,5 +120,7 @@ Route::middleware('auth')->group(function () {
             ->only(['index', 'show', 'store', 'update', 'destroy']);
 
         Route::resource('annonces', AnnonceController::class)->except(['index', 'show']);
+
+        Route::resource('roles', RoleController::class);
     });
 });

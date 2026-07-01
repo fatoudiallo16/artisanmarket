@@ -39,7 +39,7 @@ class AnnonceController extends Controller
 
         $this->annonceService->create(Auth::id(), $request->only('titre', 'contenu', 'image'));
 
-        return redirect()->route('annonces.index')->with('success', 'Annonce publiée avec succès.');
+        return redirect()->route('admin.dashboard')->with('success', 'Annonce publiée avec succès.');
     }
 
     public function show(Annonce $annonce): RedirectResponse
@@ -65,7 +65,7 @@ class AnnonceController extends Controller
 
         $this->annonceService->update($annonce, $request->only('titre', 'contenu', 'image'));
 
-        return redirect()->route('annonces.show', $annonce)->with('success', 'Annonce mise à jour.');
+        return redirect()->route('admin.dashboard')->with('success', 'Annonce mise à jour.');
     }
 
     public function destroy(Annonce $annonce): RedirectResponse

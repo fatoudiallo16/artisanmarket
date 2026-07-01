@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use App\Enums\VendeurStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vendeur extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'id_utilisateur', 'statut', 'name', 'nom_boutique'];
+    protected $fillable = ['user_id', 'statut', 'name', 'nom_boutique'];
+
+    protected function casts(): array
+    {
+        return [
+            'statut' => VendeurStatus::class,
+        ];
+    }
 
     public function user()
     {
@@ -23,6 +32,6 @@ class Vendeur extends Model
 
     public function isActive(): bool
     {
-        return $this->statut === 'approuve';
+        return $this->statut === VendeurStatus::APPROVED;
     }
 }

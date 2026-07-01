@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Exceptions\PaymentException;
 use App\Models\Paiement;
 use App\Models\Commande;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +26,7 @@ class PaymentService
             'commande_id' => $commandeId,
             'montant' => $montant,
             'mode_paiement' => $modePaiement,
-            'statut' => 'en_attente',
+            'statut' => PaymentStatus::PENDING,
             'date_paiement' => now(),
         ]);
     }
@@ -35,7 +38,7 @@ class PaymentService
     {
         return DB::transaction(function () use ($paiement, $modePaiement) {
             $updates = [
-                'statut' => 'paye',
+                'statut' => PaymentStatus::PAID,
                 'date_paiement' => now(),
             ];
 
@@ -48,7 +51,7 @@ class PaymentService
             }
 
             $paiement->update($updates);
-            $paiement->commande->update(['statut' => 'payee']);
+            $paiement->commande->update(['statut' => OrderStatus::PAID]);
 
             return $this->invoiceService->generateAndStore($paiement->fresh());
         });
@@ -59,7 +62,7 @@ class PaymentService
      */
     public function markAsFailed(Paiement $paiement): void
     {
-        $paiement->update(['statut' => 'echoue']);
+        $paiement->update(['statut' => PaymentStatus::FAILED]);
     }
 
     /**
@@ -67,11 +70,13 @@ class PaymentService
      */
     public function refundPayment(Paiement $paiement): void
     {
-        if ($paiement->statut !== 'paye') {
-            throw new \Exception('Seuls les paiements payés peuvent être remboursés.');
+        if ($paiement->statut !== PaymentStatus::PAID) {
+            throw PaymentException::notRefundable();
         }
 
-        $paiement->update(['statut' => 'rembourse']);
+        $paiement->update(['statut' => PaymentStatus::REFUNDED]);
+
+        $paiement->commande->load('lignecommandes.produit');
 
         foreach ($paiement->commande->lignecommandes as $ligne) {
             if ($ligne->produit) {
@@ -79,13 +84,13 @@ class PaymentService
             }
         }
 
-        $paiement->commande->update(['statut' => 'annulee']);
+        $paiement->commande->update(['statut' => OrderStatus::CANCELLED]);
     }
 
     public function getTotalPaidForOrder(Commande $commande): float
     {
         return $commande->paiements()
-            ->where('statut', 'paye')
+            ->where('statut', PaymentStatus::PAID)
             ->sum('montant');
     }
 

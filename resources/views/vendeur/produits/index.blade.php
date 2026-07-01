@@ -37,10 +37,7 @@
                     @forelse(($produits ?? $products) as $produit)
                         @php
                             $status = $produit->status ?? 'pending';
-                            $categoryName = $produit->categorie?->name
-                                ?? $produit->categorie?->nom
-                                ?? $produit->categorie?->nom_categorie
-                                ?? 'Artisanat';
+                            $categoryName = $produit->categorie?->name ?? 'Artisanat';
                         @endphp
 
                         <tr class="border-b">

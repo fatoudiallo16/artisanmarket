@@ -46,10 +46,7 @@ class ProduitVisual
     /** @return array{slug: string, label: string, class: string, icon: string} */
     public static function forProduit(Produit $produit): array
     {
-        $name = $produit->categorie?->nom
-            ?? $produit->categorie?->nom_categorie
-            ?? $produit->categorie?->name
-            ?? '';
+        $name = $produit->categorie?->name ?? '';
 
         return self::forCategory($name);
     }

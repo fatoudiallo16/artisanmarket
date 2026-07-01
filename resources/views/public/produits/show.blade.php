@@ -4,10 +4,7 @@
 
 @section('content')
 @php
-    $categoryName = $produit->categorie?->name
-        ?? $produit->categorie?->nom
-        ?? $produit->categorie?->nom_categorie
-        ?? 'Artisanat';
+    $categoryName = $produit->categorie?->name ?? 'Artisanat';
     $vendeurName = $produit->vendeur?->nom_boutique
         ?? $produit->vendeur?->name
         ?? 'Artisan';
@@ -66,16 +63,17 @@
                     {{ $produit->nom }}
                 </h1>
 
-                <!-- Avis / Etoiles fictifs -->
+                <!-- Avis / Etoiles dynamiques -->
                 <div class="flex items-center gap-2 mt-3">
                     <div class="flex text-amber-500">
-                        @for ($i = 0; $i < 5; $i++)
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                        @php($avg = round($produit->averageRating()))
+                        @for ($i = 1; $i <= 5; $i++)
+                            <svg class="w-4 h-4 {{ $i <= $avg ? 'fill-current' : 'text-slate-200 fill-none' }}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
                         @endfor
                     </div>
-                    <span class="text-xs text-slate-500 font-bold">(24 avis)</span>
+                    <span class="text-xs text-slate-500 font-bold">({{ $produit->ratingsCount() }} avis) - {{ $produit->averageRating() }}/5</span>
                 </div>
 
                 <div class="mt-6">
@@ -139,6 +137,10 @@
                 </div>
 
                 @auth
+                    <form id="form-toggle-favori" method="POST" action="{{ route('favoris.toggle', $produit) }}" style="display:none;">
+                        @csrf
+                    </form>
+
                     <form method="POST" action="{{ route('panier.store') }}" class="mt-8">
                         @csrf
                         <input type="hidden" name="produit_id" value="{{ $produit->id }}">
@@ -185,13 +187,17 @@
                                 Ajouter au panier
                             </button>
 
-                            <a
-                                href="{{ route('favoris.index') }}"
-                                class="w-14 h-14 rounded-2xl border border-[#E7DDD1] bg-white hover:border-red-500 hover:text-red-500 transition flex items-center justify-center text-slate-500"
-                                title="Ajouter aux favoris"
+                            @php
+                                $isFavorited = Auth::check() && Auth::user()->favoris()->where('produit_id', $produit->id)->exists();
+                            @endphp
+                            <button
+                                type="submit"
+                                form="form-toggle-favori"
+                                class="w-14 h-14 rounded-2xl border {{ $isFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-[#E7DDD1] bg-white text-slate-500 hover:border-red-500 hover:text-red-500' }} transition flex items-center justify-center"
+                                title="{{ $isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
                             >
-                                <svg class="w-5 h-5 fill-none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                            </a>
+                                <svg class="w-5 h-5 {{ $isFavorited ? 'fill-red-500' : 'fill-none' }}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            </button>
                         </div>
                     </form>
                 @else
@@ -304,6 +310,115 @@
             </div>
         </div>
 
+        <!-- Section Avis/Commentaires -->
+        <div class="mt-20 border-t border-[#EEE4D8] pt-12">
+            <h2 class="text-3xl font-black text-slate-900 mb-8">Avis des clients</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                
+                <!-- Statistiques des notes -->
+                <div class="lg:col-span-4 bg-white rounded-3xl border border-[#EEE4D8] p-8 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Note globale</h3>
+                    <div class="flex items-center gap-4">
+                        <span class="text-5xl font-black text-[#D86513]">{{ $produit->averageRating() }}</span>
+                        <div>
+                            <div class="flex text-amber-500">
+                                @php($avg = round($produit->averageRating()))
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <svg class="w-5 h-5 {{ $i <= $avg ? 'fill-current' : 'text-slate-200 fill-none' }}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                @endfor
+                            </div>
+                            <p class="text-xs text-slate-500 font-bold mt-1">Basé sur {{ $produit->ratingsCount() }} {{ $produit->ratingsCount() > 1 ? 'avis' : 'avis' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Si l'utilisateur est éligible pour laisser un avis -->
+                    @auth
+                        @php
+                            $alreadyReviewed = \App\Models\Avis::where('user_id', auth()->id())->where('produit_id', $produit->id)->exists();
+                            $hasPurchased = \App\Models\Commande::where('user_id', auth()->id())
+                                ->where('statut', 'payee')
+                                ->whereHas('lignecommandes', function ($q) use ($produit) {
+                                    $q->where('produit_id', $produit->id);
+                                })->exists();
+                        @endphp
+
+                        @if($hasPurchased && !$alreadyReviewed)
+                            <div class="mt-8 pt-6 border-t border-slate-100">
+                                <h4 class="font-bold text-sm text-slate-800 mb-3">Laisser un avis</h4>
+                                <form method="POST" action="{{ route('produits.avis.store', $produit) }}" class="space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-2">Note :</label>
+                                        <select name="note" class="w-full border border-[#E7DDD1] bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#D86513]">
+                                            <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                                            <option value="4">⭐⭐⭐⭐ (Très bon)</option>
+                                            <option value="3">⭐⭐⭐ (Moyen)</option>
+                                            <option value="2">⭐⭐ (Médiocre)</option>
+                                            <option value="1">⭐ (Très mauvais)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-500 mb-2">Commentaire :</label>
+                                        <textarea name="commentaire" rows="3" placeholder="Partagez votre expérience..." class="w-full border border-[#E7DDD1] bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#D86513]"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full py-2.5 bg-[#D86513] hover:bg-[#C45B10] text-white font-bold rounded-xl text-xs transition duration-200">
+                                        Publier l'avis
+                                    </button>
+                                </form>
+                            </div>
+                        @elseif($alreadyReviewed)
+                            <div class="mt-6 p-4 bg-green-50 border border-green-100 text-green-800 rounded-2xl text-xs font-medium text-center">
+                                Vous avez déjà évalué ce produit. Merci !
+                            </div>
+                        @else
+                            <div class="mt-6 p-4 bg-slate-50 border border-slate-100 text-slate-500 rounded-2xl text-xs leading-relaxed">
+                                ℹ️ Vous devez acheter ce produit et avoir une commande payée pour pouvoir laisser un avis vérifié.
+                            </div>
+                        @endif
+                    @else
+                        <div class="mt-6 p-4 bg-[#FFF1E7] border border-[#FFE3D1] text-[#D86513] rounded-2xl text-xs leading-relaxed text-center">
+                            <a href="{{ route('login', ['redirect' => url()->current()]) }}" class="font-bold underline text-[#D86513]">Connectez-vous</a> pour laisser un avis.
+                        </div>
+                    @endauth
+                </div>
+
+                <!-- Liste des avis -->
+                <div class="lg:col-span-8 space-y-6">
+                    @forelse($produit->avis()->with('user')->latest()->get() as $av)
+                        <div class="bg-white rounded-3xl border border-[#EEE4D8] p-6 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">{{ $av->user->name }}</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Avis vérifié le {{ $av->created_at->format('d/m/Y') }}</p>
+                                </div>
+                                <div class="flex text-amber-500">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <svg class="w-4 h-4 {{ $i <= $av->note ? 'fill-current' : 'text-slate-200 fill-none' }}" stroke="currentColor" stroke-width="1.5" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    @endfor
+                                </div>
+                            </div>
+                            @if($av->commentaire)
+                                <p class="text-slate-600 text-sm mt-4 leading-relaxed bg-[#FAF7F2] p-4 rounded-2xl border border-[#EEE4D8]/30">
+                                    {{ $av->commentaire }}
+                                </p>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="bg-white rounded-3xl border border-[#EEE4D8] p-10 text-center text-slate-500">
+                            <span class="text-3xl block mb-2">⭐</span>
+                            Aucun avis n'a encore été laissé pour ce produit. Soyez le premier à donner votre avis !
+                        </div>
+                    @endforelse
+                </div>
+
+            </div>
+        </div>
+
         @if($related->isNotEmpty())
             <div class="mt-20">
                 <div class="flex items-end justify-between gap-6 mb-8">
@@ -314,6 +429,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     @foreach($related as $item)
                         @include('composants.cartes.carte-produits', [
+                            'id' => $item->id,
                             'title' => $item->nom,
                             'description' => \Illuminate\Support\Str::limit($item->description, 90),
                             'price' => number_format((float) $item->prix, 0, ' ', ' ') . ' FCFA',

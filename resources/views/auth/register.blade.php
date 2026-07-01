@@ -64,72 +64,7 @@
                     </div>
 
 
-                    <div
-                        x-data="{ vendeur: false }">
 
-                        <label class="block text-sm font-medium mb-3">
-                            Type de compte
-                        </label>
-
-                        <div class="space-y-3">
-
-                            <label
-                                class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-gray-50">
-
-                                <input
-                                    type="radio"
-                                    name="account_type"
-                                    value="client"
-                                    checked
-                                    @click="vendeur=false">
-
-                                <div>
-                                    <h3 class="font-semibold">
-                                        Client
-                                    </h3>
-
-                                    <p class="text-sm text-gray-500">
-                                        Acheter des produits artisanaux
-                                    </p>
-                                </div>
-
-                            </label>
-
-                            <label
-                                class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-gray-50">
-
-                                <input
-                                    type="radio"
-                                    name="account_type"
-                                    value="seller"
-                                    @click="vendeur=true">
-
-                                <div>
-                                    <h3 class="font-semibold">
-                                        Demande de compte vendeur
-                                    </h3>
-
-                                    <p class="text-sm text-gray-500">
-                                        Vendre vos créations sur la plateforme
-                                    </p>
-                                </div>
-
-                            </label>
-
-                        </div>
-
-                        <div
-                            x-show="vendeur"
-                            x-transition
-                            class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-
-                            <p class="text-sm text-amber-800">
-                                Votre demande sera examinée par un administrateur avant l'activation du compte vendeur.
-                            </p>
-
-                        </div>
-
-                    </div>
 
                     <div
                         x-data="{ show:false }">

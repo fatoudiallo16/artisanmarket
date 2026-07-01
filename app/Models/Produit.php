@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Produit extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'nom',
@@ -28,7 +28,7 @@ class Produit extends Model
     protected static function booted(): void
     {
         static::creating(function (Produit $produit) {
-            if (Schema::hasColumn($produit->getTable(), 'slug') && blank($produit->slug)) {
+            if (blank($produit->slug)) {
                 $produit->slug = static::uniqueSlug($produit->nom);
             }
         });
@@ -61,6 +61,26 @@ class Produit extends Model
     public function lignepaniers()
     {
         return $this->hasMany(Lignepanier::class, 'produit_id');
+    }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'favoris')->withTimestamps();
+    }
+
+    public function avis()
+    {
+        return $this->hasMany(Avis::class, 'produit_id');
+    }
+
+    public function averageRating(): float
+    {
+        return round((float) $this->avis()->avg('note'), 1);
+    }
+
+    public function ratingsCount(): int
+    {
+        return $this->avis()->count();
     }
 
     private static function uniqueSlug(string $name): string

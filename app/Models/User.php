@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'role_id'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -59,6 +59,16 @@ class User extends Authenticatable
             return $this->hasOne(AdminProfile::class, 'user_id');
         }
 
+        public function favoris()
+        {
+            return $this->belongsToMany(Produit::class, 'favoris')->withTimestamps();
+        }
+
+        public function avis()
+        {
+            return $this->hasMany(Avis::class, 'user_id');
+        }
+
         public function hasRole(string ...$roles): bool
         {
             return $this->role !== null && in_array($this->role->nom_role, $roles, true);
@@ -76,9 +86,10 @@ class User extends Authenticatable
             }
 
             if ($this->role->nom_role === 'vendeur') {
-                $this->vendeurProfile()->firstOrCreate([
-                    'nom_boutique' => 'Boutique '.$this->name,
-                ]);
+                $this->vendeurProfile()->firstOrCreate(
+                    ['user_id' => $this->id],
+                    ['nom_boutique' => 'Boutique '.$this->name]
+                );
                 return;
             }
 

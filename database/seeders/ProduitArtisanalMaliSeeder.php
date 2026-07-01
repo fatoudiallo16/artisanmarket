@@ -9,25 +9,18 @@ use App\Models\User;
 use App\Models\Vendeur;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 
 class ProduitArtisanalMaliSeeder extends Seeder
 {
     public function run(): void
     {
-        $categoryColumn = match (true) {
-            Schema::hasColumn('categories', 'name') => 'name',
-            Schema::hasColumn('categories', 'nom') => 'nom',
-            default => 'nom_categorie',
-        };
-
         $categoryNames = [
             'bijoux', 'tissus', 'poterie', 'sculpture bois', 'cuir',
             'instruments', 'maroquinerie', 'art mural', 'vannerie', 'cosmetiques',
         ];
 
         $categories = collect($categoryNames)->mapWithKeys(
-            fn (string $name) => [$name => Categorie::firstOrCreate([$categoryColumn => $name])]
+            fn (string $name) => [$name => Categorie::firstOrCreate(['name' => $name])]
         );
 
         $vendeurRole = Role::where('nom_role', 'vendeur')->first();
@@ -93,7 +86,6 @@ class ProduitArtisanalMaliSeeder extends Seeder
             return Vendeur::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'id_utilisateur' => $user->id,
                     'statut' => 'approuve',
                     'name' => $data['name'],
                     'nom_boutique' => $data['boutique'],

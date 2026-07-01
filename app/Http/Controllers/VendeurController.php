@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\VendeurStatus;
 use App\Models\Role;
 use App\Models\Vendeur;
 use Illuminate\Http\Request;
@@ -10,18 +11,24 @@ use Illuminate\Support\Facades\Auth;
 
 class VendeurController extends Controller
 {
-    public function requestAccess(Request $request): JsonResponse
+    public function requestAccess(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();
         $clientRole = Role::where('nom_role', 'client')->first();
 
         if (!$user || !$clientRole || (int) $user->role_id !== (int) $clientRole->id) {
-            return response()->json(['message' => 'Seuls les clients peuvent envoyer une demande.'], 403);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Seuls les clients peuvent envoyer une demande.'], 403);
+            }
+            return redirect()->back()->with('error', 'Seuls les clients peuvent envoyer une demande.');
         }
 
         $existing = Vendeur::where('user_id', $user->id)->first();
-        if ($existing && $existing->statut === 'en_attente') {
-            return response()->json(['message' => 'Une demande est deja en attente.'], 422);
+        if ($existing && $existing->statut === VendeurStatus::PENDING) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Une demande est deja en attente.'], 422);
+            }
+            return redirect()->back()->with('error', 'Une demande est déjà en attente.');
         }
 
         $data = $request->validate([
@@ -31,17 +38,20 @@ class VendeurController extends Controller
         $vendeur = Vendeur::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'id_utilisateur' => $user->id,
                 'name' => $user->name,
                 'nom_boutique' => $data['nom_boutique'],
-                'statut' => 'en_attente',
+                'statut' => VendeurStatus::PENDING,
             ]
         );
 
-        return response()->json([
-            'message' => 'Demande vendeur envoyee avec succes.',
-            'vendeur' => $vendeur,
-        ], 201);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Demande vendeur envoyee avec succes.',
+                'vendeur' => $vendeur,
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'Votre demande vendeur a été envoyée avec succès.');
     }
 
     public function index(Request $request)
@@ -65,7 +75,7 @@ class VendeurController extends Controller
     public function update(Request $request, Vendeur $vendeur)
     {
         $data = $request->validate([
-            'statut' => ['sometimes', 'in:en_attente,approuve,suspendu,rejete'],
+            'statut' => ['sometimes', 'in:' . implode(',', array_column(VendeurStatus::cases(), 'value'))],
             'name' => ['sometimes', 'string', 'max:255'],
             'nom_boutique' => ['sometimes', 'string', 'max:255'],
         ]);
@@ -87,24 +97,28 @@ class VendeurController extends Controller
         return back()->with('success', 'Statut du vendeur mis à jour.');
     }
 
-    public function destroy(Vendeur $vendeur): JsonResponse
+    public function destroy(Vendeur $vendeur)
     {
         $this->setUserRole($vendeur->user_id, 'client');
         $vendeur->delete();
 
-        return response()->json([
-            'message' => 'Vendeur supprime.',
-        ]);
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'message' => 'Vendeur supprime.',
+            ]);
+        }
+
+        return redirect()->route('admin.vendeurs.index')->with('success', 'Vendeur supprimé.');
     }
 
     private function syncUserRoleFromStatus(Vendeur $vendeur): void
     {
-        if ($vendeur->statut === 'approuve') {
+        if ($vendeur->statut === VendeurStatus::APPROVED) {
             $this->setUserRole($vendeur->user_id, 'vendeur');
             return;
         }
 
-        if (in_array($vendeur->statut, ['rejete', 'suspendu'], true)) {
+        if (in_array($vendeur->statut, [VendeurStatus::REJECTED, VendeurStatus::SUSPENDED], true)) {
             $this->setUserRole($vendeur->user_id, 'client');
         }
     }

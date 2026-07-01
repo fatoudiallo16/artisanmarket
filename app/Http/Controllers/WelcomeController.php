@@ -5,21 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Annonce;
 use App\Models\Categorie;
 use App\Models\Produit;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class WelcomeController extends Controller
 {
     public function index(): View
     {
-        $categoryColumn = match (true) {
-            Schema::hasColumn('categories', 'name') => 'name',
-            Schema::hasColumn('categories', 'nom') => 'nom',
-            default => 'nom_categorie',
-        };
-
         $produitsEnVedette = Produit::query()
             ->with(['vendeur', 'categorie'])
+            ->where('status', 'approved')
             ->where('stock', '>', 0)
             ->latest()
             ->limit(10)
@@ -36,7 +30,6 @@ class WelcomeController extends Controller
         return view('public.accueil.welcome', compact(
             'produitsEnVedette',
             'categories',
-            'categoryColumn',
             'latestAnnonce'
         ));
     }

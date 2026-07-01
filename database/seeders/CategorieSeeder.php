@@ -13,14 +13,21 @@ class CategorieSeeder extends Seeder
      */
     public function run(): void
     {
-        $column = Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie';
+        $column = match (true) {
+            Schema::hasColumn('categories', 'name') => 'name',
+            Schema::hasColumn('categories', 'nom') => 'nom',
+            default => 'nom_categorie',
+        };
 
         foreach ([
             'bijoux', 'tissus', 'poterie', 'pot en terre cuite',
             'sculpture bois', 'cuir', 'instruments', 'maroquinerie',
             'art mural', 'vannerie', 'cosmetiques',
         ] as $name) {
-            Categorie::firstOrCreate([$column => $name]);
+            Categorie::firstOrCreate(
+                [$column => $name],
+                ['slug' => \Illuminate\Support\Str::slug($name)]
+            );
         }
     }
 }

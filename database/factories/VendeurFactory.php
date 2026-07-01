@@ -19,7 +19,6 @@ class VendeurFactory extends Factory
     {
         $user = \App\Models\User::factory();
         return [
-            'id_utilisateur' => $user,
             'user_id' => $user,
             'statut' => 'approuve',
             'name' => $this->faker->name(),

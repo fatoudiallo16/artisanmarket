@@ -16,9 +16,7 @@ class PanierController extends Controller
     public function __construct(
         private CartService $cartService,
         private OrderService $orderService,
-    ) {
-        $this->middleware('auth');
-    }
+    ) {}
 
     public function index(): View
     {

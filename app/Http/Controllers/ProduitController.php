@@ -9,7 +9,6 @@ use App\Services\ProduitImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class ProduitController extends Controller
@@ -30,19 +29,13 @@ class ProduitController extends Controller
             });
         }
 
-        $categoryColumn = match (true) {
-            Schema::hasColumn('categories', 'name') => 'name',
-            Schema::hasColumn('categories', 'nom') => 'nom',
-            default => 'nom_categorie',
-        };
-
         if ($request->filled('categorie')) {
             $category = $request->string('categorie')->lower()->toString();
-            $query->whereHas('categorie', function ($builder) use ($category, $categoryColumn) {
+            $query->whereHas('categorie', function ($builder) use ($category) {
                 if (is_numeric($category)) {
                     $builder->where('id', (int) $category);
                 } else {
-                    $builder->whereRaw("LOWER({$categoryColumn}) like ?", ["%{$category}%"]);
+                    $builder->whereRaw("LOWER(name) like ?", ["%{$category}%"]);
                 }
             });
         }
@@ -73,7 +66,24 @@ class ProduitController extends Controller
             ->limit(7)
             ->get();
 
-        return view('public.produits.index', compact('produits', 'categories', 'categoryColumn'));
+        return view('public.produits.index', compact('produits', 'categories'));
+    }
+
+    public function byCategorie(Categorie $categorie): View
+    {
+        $produits = Produit::with(['vendeur', 'categorie'])
+            ->where('categorie_id', $categorie->id)
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        $categories = Categorie::query()
+            ->withCount('produits')
+            ->orderByDesc('produits_count')
+            ->limit(7)
+            ->get();
+
+        return view('public.produits.index', compact('produits', 'categories', 'categorie'));
     }
 
     public function show(Produit $produit): View
@@ -103,7 +113,7 @@ class ProduitController extends Controller
         $user = Auth::user();
 
         return view('vendeur.produits.create', [
-            'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
+            'categories' => Categorie::orderBy('name')->get(),
             'vendeurs' => $user->hasRole('admin') ? \App\Models\Vendeur::where('statut', 'approuve')->orderBy('nom_boutique')->get() : collect(),
         ]);
     }
@@ -134,7 +144,7 @@ class ProduitController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        $redirectRoute = $user->hasRole('admin') ? 'admin.dashboard' : 'home';
+        $redirectRoute = $user->hasRole('admin') ? 'admin.dashboard' : 'vendeur.dashboard';
 
         return redirect()
             ->route($redirectRoute)
@@ -147,7 +157,7 @@ class ProduitController extends Controller
 
         return view('vendeur.produits.edit', [
             'produit' => $produit,
-            'categories' => Categorie::orderBy(Schema::hasColumn('categories', 'nom') ? 'nom' : 'nom_categorie')->get(),
+            'categories' => Categorie::orderBy('name')->get(),
         ]);
     }
 

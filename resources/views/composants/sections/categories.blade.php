@@ -34,7 +34,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             @forelse($categories as $category)
                 @php
-                    $categoryName = $category->{$categoryColumn} ?? $category->name ?? 'Catégorie';
+                    $categoryName = $category->name ?? 'Catégorie';
                     $slug = strtolower(\Illuminate\Support\Str::slug($categoryName));
                     $unsplashMap = [
                         'bijoux' => 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=600&auto=format&fit=crop',

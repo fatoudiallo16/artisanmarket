@@ -3,10 +3,7 @@
 @section('content')
 @php
     $status = $produit->status ?? 'pending';
-    $categoryName = $produit->categorie?->name
-        ?? $produit->categorie?->nom
-        ?? $produit->categorie?->nom_categorie
-        ?? 'Artisanat';
+    $categoryName = $produit->categorie?->name ?? 'Artisanat';
 @endphp
 
 <div class="max-w-7xl mx-auto p-6">

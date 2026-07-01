@@ -10,22 +10,15 @@ use App\Models\User;
 use App\Models\Vendeur;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 
 class MarketplaceSeeder extends Seeder
 {
     public function run(): void
     {
-        $categoryColumn = match (true) {
-            Schema::hasColumn('categories', 'name') => 'name',
-            Schema::hasColumn('categories', 'nom') => 'nom',
-            default => 'nom_categorie',
-        };
-
         $categories = collect([
-            'bijoux' => Categorie::firstOrCreate([$categoryColumn => 'bijoux']),
-            'tissus' => Categorie::firstOrCreate([$categoryColumn => 'tissus']),
-            'poterie' => Categorie::firstOrCreate([$categoryColumn => 'poterie']),
+            'bijoux' => Categorie::firstOrCreate(['name' => 'bijoux']),
+            'tissus' => Categorie::firstOrCreate(['name' => 'tissus']),
+            'poterie' => Categorie::firstOrCreate(['name' => 'poterie']),
         ]);
 
         $clientRole = Role::where('nom_role', 'client')->first();
@@ -91,7 +84,6 @@ class MarketplaceSeeder extends Seeder
                 $vendeur = Vendeur::updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'id_utilisateur' => $user->id,
                         'statut' => 'approuve',
                         'name' => $data['name'],
                         'nom_boutique' => $data['nom_boutique'],
@@ -142,6 +134,109 @@ class MarketplaceSeeder extends Seeder
                         'user_id' => $admin->id,
                     ]
                 );
+            }
+        }
+
+        // Seed orders, favorites, and reviews for Awa Diallo (client)
+        if (isset($client)) {
+            // Get some products
+            $products = Produit::take(3)->get();
+
+            if ($products->isNotEmpty()) {
+                // 1. Seed a paid order containing the first product
+                $p1 = $products[0];
+                $commande = \App\Models\Commande::firstOrCreate(
+                    [
+                        'user_id' => $client->id,
+                        'statut' => 'payee',
+                    ]
+                );
+
+                \App\Models\Lignecommande::firstOrCreate(
+                    [
+                        'commande_id' => $commande->id,
+                        'produit_id' => $p1->id,
+                    ],
+                    [
+                        'quantite' => 1,
+                        'prix_unitaire' => $p1->prix,
+                    ]
+                );
+
+                \App\Models\Paiement::firstOrCreate(
+                    [
+                        'commande_id' => $commande->id,
+                    ],
+                    [
+                        'montant' => $p1->prix,
+                        'mode_paiement' => 'carte',
+                        'statut' => 'paye',
+                        'date_paiement' => now(),
+                    ]
+                );
+
+                // 2. Seed a review for the first product
+                \App\Models\Avis::firstOrCreate(
+                    [
+                        'user_id' => $client->id,
+                        'produit_id' => $p1->id,
+                    ],
+                    [
+                        'note' => 5,
+                        'commentaire' => 'Ce produit est d’une qualité artisanale exceptionnelle ! Je le recommande vivement.',
+                    ]
+                );
+
+                // 3. Seed another review from a different user (e.g. fatou@artisanmarket.test user)
+                $otherUser = User::where('email', 'fatou@artisanmarket.test')->first();
+                if ($otherUser && isset($products[1])) {
+                    $p2 = $products[1];
+                    
+                    // Create paid order for other user
+                    $commandeOther = \App\Models\Commande::firstOrCreate(
+                        [
+                            'user_id' => $otherUser->id,
+                            'statut' => 'payee',
+                        ]
+                    );
+                    \App\Models\Lignecommande::firstOrCreate(
+                        [
+                            'commande_id' => $commandeOther->id,
+                            'produit_id' => $p2->id,
+                        ],
+                        [
+                            'quantite' => 2,
+                            'prix_unitaire' => $p2->prix,
+                        ]
+                    );
+                    \App\Models\Paiement::firstOrCreate(
+                        [
+                            'commande_id' => $commandeOther->id,
+                        ],
+                        [
+                            'montant' => $p2->prix * 2,
+                            'mode_paiement' => 'momo',
+                            'statut' => 'paye',
+                            'date_paiement' => now(),
+                        ]
+                    );
+
+                    \App\Models\Avis::firstOrCreate(
+                        [
+                            'user_id' => $otherUser->id,
+                            'produit_id' => $p2->id,
+                        ],
+                        [
+                            'note' => 4,
+                            'commentaire' => 'Très satisfait du travail de tissage. Quelques retards de livraison mais excellent produit.',
+                        ]
+                    );
+                }
+
+                // 4. Seed a favorite for the second product for the main client
+                if (isset($products[1])) {
+                    $client->favoris()->syncWithoutDetaching([$products[1]->id]);
+                }
             }
         }
     }

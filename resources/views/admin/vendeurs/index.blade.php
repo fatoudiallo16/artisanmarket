@@ -59,19 +59,19 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     @php
-                                        $statusClass = match($vendeur->statut) {
+                                        $statusClass = match($vendeur->statut->value) {
                                             'approuve' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                                             'en_attente' => 'bg-amber-100 text-amber-800 border-amber-200',
                                             'suspendu' => 'bg-slate-100 text-slate-800 border-slate-200',
                                             'rejete' => 'bg-rose-100 text-rose-800 border-rose-200',
                                             default => 'bg-slate-100 text-slate-800 border-slate-200',
                                         };
-                                        $statusLabel = match($vendeur->statut) {
+                                        $statusLabel = match($vendeur->statut->value) {
                                             'approuve' => 'Approuvé',
                                             'en_attente' => 'En attente',
                                             'suspendu' => 'Suspendu',
                                             'rejete' => 'Rejeté',
-                                            default => $vendeur->statut,
+                                            default => $vendeur->statut->value,
                                         };
                                     @endphp
                                     <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ $statusClass }}">
@@ -83,7 +83,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        @if($vendeur->statut === 'en_attente')
+                                        @if($vendeur->statut->value === 'en_attente')
                                             <form action="{{ route('admin.vendeurs.update', $vendeur) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PUT')
@@ -100,7 +100,7 @@
                                                     Rejeter
                                                 </button>
                                             </form>
-                                        @elseif($vendeur->statut === 'approuve')
+                                        @elseif($vendeur->statut->value === 'approuve')
                                             <form action="{{ route('admin.vendeurs.update', $vendeur) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PUT')

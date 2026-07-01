@@ -2,11 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Commande extends Model
 {
+    use SoftDeletes;
     protected $fillable = ['statut', 'user_id'];
+
+    protected function casts(): array
+    {
+        return [
+            'statut' => OrderStatus::class,
+        ];
+    }
 
     public function user()
     {
@@ -17,6 +27,7 @@ class Commande extends Model
     {
         return $this->hasMany(Lignecommande::class, 'commande_id');
     }
+
     public function paiement()
     {
         return $this->hasOne(Paiement::class, 'commande_id');
@@ -24,7 +35,6 @@ class Commande extends Model
 
     public function paiements()
     {
-        return $this->paiement();
+        return $this->hasMany(Paiement::class, 'commande_id');
     }
-    
 }

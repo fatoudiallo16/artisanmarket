@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Lignepanier;
 use App\Models\Panier;
 use App\Models\Produit;
@@ -35,7 +36,7 @@ class CartService
         $newQuantite = $article->exists ? $article->quantite + $quantite : $quantite;
 
         if ($produit->stock < $newQuantite) {
-            throw new \Exception("Stock insuffisant pour {$produit->nom} (disponible : {$produit->stock}).");
+            throw new InsufficientStockException($produit->nom, $produit->stock, $newQuantite);
         }
 
         $article->quantite = $newQuantite;
@@ -60,7 +61,7 @@ class CartService
         }
 
         if ($produit->stock < $quantite) {
-            throw new \Exception("Stock insuffisant pour {$produit->nom}");
+            throw new InsufficientStockException($produit->nom, $produit->stock, $quantite);
         }
 
         $article = Lignepanier::where('panier_id', $panier->id)

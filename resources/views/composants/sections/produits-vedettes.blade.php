@@ -34,9 +34,10 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             @forelse($produitsEnVedette as $item)
                 @php
-                    $categoryName = $item->categorie?->{$categoryColumn} ?? $item->categorie?->name ?? 'Artisanat';
+                    $categoryName = $item->categorie?->name ?? 'Artisanat';
                 @endphp
                 @include('composants.cartes.carte-produits', [
+                    'id' => $item->id,
                     'title' => $item->nom,
                     'description' => \Illuminate\Support\Str::limit($item->description, 90),
                     'price' => number_format((float) $item->prix, 0, ' ', ' ') . ' FCFA',

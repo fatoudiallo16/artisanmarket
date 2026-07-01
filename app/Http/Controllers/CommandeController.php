@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\Commande;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,9 @@ class CommandeController extends Controller
 
         $commandes = $query->with('paiement')->paginate(15);
 
-        return view('client.commandes.index', compact('commandes'));
+        $view = Auth::user()->hasRole('admin') ? 'admin.commandes.index' : 'client.commandes.index';
+
+        return view($view, compact('commandes'));
     }
 
     public function show(Commande $commande): View
@@ -31,7 +34,9 @@ class CommandeController extends Controller
 
         $commande->load(['lignecommandes.produit', 'paiement']);
 
-        return view('client.commandes.show', compact('commande'));
+        $view = Auth::user()->hasRole('admin') ? 'admin.commandes.show' : 'client.commandes.show';
+
+        return view($view, compact('commande'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -39,12 +44,12 @@ class CommandeController extends Controller
         $this->authorize('create', Commande::class);
 
         $data = $request->validate([
-            'statut' => ['nullable', 'in:en_attente,en_cours,payee,annulee'],
+            'statut' => ['nullable', 'in:' . implode(',', array_column(OrderStatus::cases(), 'value'))],
         ]);
 
         $commande = Commande::create([
             'user_id' => Auth::id(),
-            'statut' => $data['statut'] ?? 'en_attente',
+            'statut' => $data['statut'] ?? OrderStatus::PENDING,
         ]);
 
         return redirect()->route($this->routeName('show'), $commande)->with('success', 'Commande creee.');
@@ -55,7 +60,7 @@ class CommandeController extends Controller
         $this->authorize('update', $commande);
 
         $data = $request->validate([
-            'statut' => ['required', 'in:en_attente,en_cours,payee,annulee'],
+            'statut' => ['required', 'in:' . implode(',', array_column(OrderStatus::cases(), 'value'))],
         ]);
 
         $commande->update($data);

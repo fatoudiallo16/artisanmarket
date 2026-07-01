@@ -124,6 +124,24 @@
                     <form method="POST" action="{{ route('profile.destroy') }}" onsubmit="return confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte définitivement ? Cette action est irréversible.');">
                         @csrf
                         @method('DELETE')
+
+                        <div class="mb-4">
+                            <label for="delete-password" class="block text-sm font-medium text-gray-700 mb-1">
+                                Confirmez votre mot de passe
+                            </label>
+                            <input
+                                type="password"
+                                name="password"
+                                id="delete-password"
+                                required
+                                class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-xl focus:ring-rose-500 focus:border-rose-500 @error('password') border-rose-500 @enderror"
+                                placeholder="Votre mot de passe actuel"
+                            >
+                            @error('password')
+                                <p class="text-sm text-rose-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <button type="submit" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm hover:shadow transition duration-200">
                             Supprimer mon compte
                         </button>

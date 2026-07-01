@@ -85,6 +85,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
                 @forelse($produits as $produit)
                     @include('composants.cartes.carte-produits', [
+                        'id' => $produit->id,
                         'title' => $produit->nom,
                         'description' => \Illuminate\Support\Str::limit($produit->description, 90),
                         'price' => number_format((float) $produit->prix, 0, ' ', ' ') . ' FCFA',

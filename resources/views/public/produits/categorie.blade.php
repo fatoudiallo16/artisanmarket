@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@php($categoryName = $categorie->{$categoryColumn} ?? $categorie->name ?? 'Categorie')
+@php($categoryName = $categorie->name ?? 'Categorie')
 
 @section('title', ucfirst($categoryName) . ' | ArtisanMarket')
 

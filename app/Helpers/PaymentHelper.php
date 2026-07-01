@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Enums\PaymentStatus;
+
 class PaymentHelper
 {
     /**
@@ -10,10 +12,11 @@ class PaymentHelper
     public static function getPaymentMethods(): array
     {
         return [
-            'carte_bancaire' => 'Carte bancaire',
+            'orange_money' => 'Orange Money',
+            'wave' => 'Wave',
+            'moov_money' => 'Moov Money',
+            'especes' => 'Espèces à la livraison',
             'virement' => 'Virement bancaire',
-            'paypal' => 'PayPal',
-            'cheque' => 'Chèque',
         ];
     }
 
@@ -22,14 +25,9 @@ class PaymentHelper
      */
     public static function formatStatus(string $statut): string
     {
-        $statuses = [
-            'en_attente' => 'En attente',
-            'paye' => 'Payé',
-            'echoue' => 'Échoué',
-            'rembourse' => 'Remboursé',
-        ];
+        $enum = PaymentStatus::tryFrom($statut);
 
-        return $statuses[$statut] ?? $statut;
+        return $enum ? $enum->label() : $statut;
     }
 
     /**
@@ -37,14 +35,16 @@ class PaymentHelper
      */
     public static function canRefund(string $statut): bool
     {
-        return $statut === 'paye';
+        $enum = PaymentStatus::tryFrom($statut);
+
+        return $enum === PaymentStatus::PAID;
     }
 
     /**
-     * Formater le montant avec devise
+     * Formater le montant avec devise (FCFA)
      */
     public static function formatAmount(float $amount): string
     {
-        return number_format($amount, 2, ',', ' ') . ' €';
+        return number_format($amount, 0, ',', ' ') . ' FCFA';
     }
 }

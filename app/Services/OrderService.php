@@ -2,6 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Exceptions\EmptyCartException;
+use App\Exceptions\InsufficientStockException;
+use App\Exceptions\OrderException;
 use App\Models\Commande;
 use App\Models\Lignecommande;
 use App\Models\Lignepanier;
@@ -13,74 +18,38 @@ use Illuminate\Support\Facades\DB;
 class OrderService
 {
     /**
-     * Créer une commande à partir du panier (méthode de CartService)
-     */
-    public function createFromCart(int $userId, array $articles): Commande
-    {
-        return DB::transaction(function () use ($userId, $articles) {
-            // Créer la commande
-            $commande = Commande::create([
-                'user_id' => $userId,
-                'statut' => 'en_attente',
-            ]);
-
-            // Transférer les articles
-            $montantTotal = 0;
-            foreach ($articles as $article) {
-                Lignecommande::create([
-                    'commande_id' => $commande->id,
-                    'produit_id' => $article['produit_id'],
-                    'quantite' => $article['quantite'],
-                    'prix_unitaire' => $article['prix_unitaire'],
-                ]);
-                $montantTotal += $article['quantite'] * $article['prix_unitaire'];
-            }
-
-            // Créer le paiement
-            Paiement::create([
-                'commande_id' => $commande->id,
-                'montant' => $montantTotal,
-                'mode_paiement' => 'en_attente',
-                'statut' => 'en_attente',
-                'date_paiement' => now(),
-            ]);
-
-            return $commande;
-        });
-    }
-
-    /**
-     * Créer une commande à partir du panier (méthode complète avec vérification stock)
+     * Créer une commande à partir du panier avec vérification de stock.
      */
     public function createOrderFromCart(int $userId): Commande
     {
         $panier = Panier::where('user_id', $userId)->first();
         
         if (!$panier) {
-            throw new \Exception('Panier non trouvé.');
+            throw OrderException::cartNotFound();
         }
 
         $articles = Lignepanier::where('panier_id', $panier->id)->get();
         
         if ($articles->isEmpty()) {
-            throw new \Exception('Panier vide.');
+            throw new EmptyCartException();
         }
 
         return DB::transaction(function () use ($panier, $articles, $userId) {
             // 1. Créer la commande
             $commande = Commande::create([
                 'user_id' => $userId,
-                'statut' => 'en_attente',
+                'statut' => OrderStatus::PENDING,
             ]);
 
             // 2. Transférer les articles du panier vers lignecommande
             $montantTotal = 0;
             foreach ($articles as $article) {
-                // Vérifier le stock
-                $produit = Produit::find($article->produit_id);
+                // Vérifier le stock avec verrou pessimiste (évite race condition)
+                $produit = Produit::lockForUpdate()->find($article->produit_id);
                 if (!$produit || $produit->stock < $article->quantite) {
                     $nom = $produit?->nom ?? 'Produit #'.$article->produit_id;
-                    throw new \Exception("Stock insuffisant pour {$nom}");
+                    $stock = $produit?->stock ?? 0;
+                    throw new InsufficientStockException($nom, $stock, $article->quantite);
                 }
 
                 // Créer la ligne de commande
@@ -102,7 +71,7 @@ class OrderService
                 'commande_id' => $commande->id,
                 'montant' => $montantTotal,
                 'mode_paiement' => 'en_ligne',
-                'statut' => 'en_attente',
+                'statut' => PaymentStatus::PENDING,
                 'date_paiement' => now(),
             ]);
 
@@ -124,39 +93,12 @@ class OrderService
     }
 
     /**
-     * Annuler une commande
-     */
-    public function cancel(int $commandeId): bool
-    {
-        $commande = Commande::with('lignecommandes.produit')->findOrFail($commandeId);
-        $this->cancelOrder($commande);
-
-        $paiement = Paiement::where('commande_id', $commandeId)->first();
-        if ($paiement && $paiement->statut === 'en_attente') {
-            $paiement->update(['statut' => 'echoue']);
-        }
-
-        return true;
-    }
-
-    /**
-     * Mettre à jour le statut d'une commande
-     */
-    public function updateStatus(int $commandeId, string $statut): Commande
-    {
-        $commande = Commande::findOrFail($commandeId);
-        $commande->update(['statut' => $statut]);
-
-        return $commande;
-    }
-
-    /**
-     * Annuler une commande (version model)
+     * Annuler une commande et restaurer le stock.
      */
     public function cancelOrder(Commande $commande): void
     {
-        if ($commande->statut === 'payee') {
-            throw new \Exception('Impossible d\'annuler une commande payée.');
+        if ($commande->statut === OrderStatus::PAID) {
+            throw OrderException::cannotCancel();
         }
 
         DB::transaction(function () use ($commande) {
@@ -166,27 +108,20 @@ class OrderService
                 }
             }
 
-            $commande->update(['statut' => 'annulee']);
+            $commande->update(['statut' => OrderStatus::CANCELLED]);
 
             $paiement = Paiement::where('commande_id', $commande->id)->first();
-            if ($paiement && $paiement->statut === 'en_attente') {
-                $paiement->update(['statut' => 'echoue']);
+            if ($paiement && $paiement->statut === PaymentStatus::PENDING) {
+                $paiement->update(['statut' => PaymentStatus::FAILED]);
             }
         });
     }
 
     /**
-     * Mettre à jour le statut d'une commande (version model)
+     * Mettre à jour le statut d'une commande.
      */
-    public function updateOrderStatus(Commande $commande, string $statut): void
+    public function updateOrderStatus(Commande $commande, OrderStatus $statut): void
     {
-        $validStatuts = ['en_attente', 'en_cours', 'payee', 'annulee'];
-        
-        if (!in_array($statut, $validStatuts)) {
-            throw new \Exception("Statut invalide: {$statut}");
-        }
-
         $commande->update(['statut' => $statut]);
     }
 }
-

@@ -78,7 +78,7 @@
         <!-- Orders Card -->
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200 group">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-slate-400 group-hover:text-amber-600 transition-colors">Commandes</span>
+                                                                                      <span class="text-sm font-medium text-slate-400 group-hover:text-amber-600 transition-colors">Commandes</span>
                 <span class="text-2xl p-2 bg-amber-50 rounded-xl">🛒</span>
             </div>
             <div class="flex items-baseline gap-2 mt-4">

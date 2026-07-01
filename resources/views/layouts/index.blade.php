@@ -79,7 +79,7 @@
         <div class="am-category-grid am-category-grid--home">
             @forelse($categories->take(6) as $categorie)
                 @php
-                    $name = $categorie->{$categoryColumn} ?? $categorie->nom ?? '';
+                    $name = $categorie->name ?? '';
                     $preview = $categoryImages[$loop->index % count($categoryImages)];
                 @endphp
                 <a href="{{ route('produits.index', ['categorie' => $name]) }}" class="am-category-tile">

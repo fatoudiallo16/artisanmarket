@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Models\Commande;
 use App\Models\Paiement;
 use App\Services\InvoiceService;
@@ -52,7 +53,7 @@ class PaiementController extends Controller
             'commande_id' => ['required', 'exists:commandes,id'],
             'montant' => ['required', 'numeric', 'min:0.01'],
             'mode_paiement' => ['required', 'string', 'max:100'],
-            'statut' => ['nullable', 'in:en_attente,paye,echoue,rembourse'],
+            'statut' => ['nullable', 'in:' . implode(',', array_column(PaymentStatus::cases(), 'value'))],
         ]);
 
         $commande = Commande::findOrFail((int) $data['commande_id']);
@@ -64,7 +65,7 @@ class PaiementController extends Controller
             'commande_id' => $commande->id,
             'montant' => $data['montant'],
             'mode_paiement' => $data['mode_paiement'],
-            'statut' => $data['statut'] ?? 'en_attente',
+            'statut' => $data['statut'] ?? PaymentStatus::PENDING,
             'date_paiement' => now(),
         ]);
 
@@ -76,7 +77,7 @@ class PaiementController extends Controller
         $this->authorize('update', $paiement);
 
         $data = $request->validate([
-            'statut' => ['required', 'in:en_attente,paye,echoue,rembourse'],
+            'statut' => ['required', 'in:' . implode(',', array_column(PaymentStatus::cases(), 'value'))],
             'mode_paiement' => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -96,7 +97,7 @@ class PaiementController extends Controller
 
     public function pay(Request $request, Paiement $paiement): RedirectResponse
     {
-        $this->authorize('view', $paiement);
+        $this->authorize('update', $paiement);
 
         $data = $request->validate([
             'mode_paiement' => ['required', 'string', 'max:100'],
