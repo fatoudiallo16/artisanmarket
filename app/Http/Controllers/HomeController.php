@@ -30,7 +30,7 @@ class HomeController extends Controller
         }
 
         if ($user->hasRole('client')) {
-            return redirect()->route('client.dashboard');
+            return redirect()->route('welcome');
         }
 
         return redirect()->route('welcome');
