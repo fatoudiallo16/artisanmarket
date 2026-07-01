@@ -16,6 +16,22 @@ class ProduitVisual
             asset('assets/img/product/product-4.jpg'),
             asset('assets/img/product/product-5.jpg'),
             asset('assets/img/product/product-6.jpg'),
+            asset('assets/img/product/product-7.jpg'),
+            asset('assets/img/product/produit-8.jpg'),
+            asset('assets/img/product/produit-9.jpg'),
+            asset('assets/img/product/produit-10.jpg'),
+            asset('assets/img/product/produit-11.jpg'),
+            // Images Unsplash par catégorie comme fallback supplémentaire
+            'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=600&auto=format&fit=crop', // Bijoux
+            'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop', // Tissus
+            'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop', // Poterie
+            'https://images.unsplash.com/photo-1606744824163-985d376605aa?q=80&w=600&auto=format&fit=crop', // Bois
+            'https://images.unsplash.com/photo-1524289286702-f07229da36f5?q=80&w=600&auto=format&fit=crop', // Cuir
+            'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=600&auto=format&fit=crop', // Instruments
+            'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=600&auto=format&fit=crop', // Maroquinerie
+            'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=600&auto=format&fit=crop', // Art mural
+            'https://images.unsplash.com/photo-1595181980833-28b7e28b8431?q=80&w=600&auto=format&fit=crop', // Vannerie
+            'https://images.unsplash.com/photo-1608248597481-496100c80836?q=80&w=600&auto=format&fit=crop', // Cosmétiques
         ];
     }
 
@@ -38,9 +54,43 @@ class ProduitVisual
     public static function fallbackImageUrl(Produit|int $produitOrId, ?int $loopIndex = null): string
     {
         $images = self::productImages();
+        
+        // Si c'est un objet Produit, essayer d'utiliser une image basée sur la catégorie
+        if ($produitOrId instanceof Produit) {
+            $categoryName = $produitOrId->categorie?->name ?? '';
+            $categoryImage = self::getImageForCategory($categoryName);
+            if ($categoryImage) {
+                return $categoryImage;
+            }
+        }
+        
+        // Fallback cyclique basé sur l'ID
         $index = $loopIndex ?? (is_int($produitOrId) ? $produitOrId : $produitOrId->id);
-
         return $images[$index % count($images)];
+    }
+
+    private static function getImageForCategory(?string $category): ?string
+    {
+        $slug = strtolower(trim((string) $category));
+        
+        $categoryImages = [
+            'bijou' => 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=600&auto=format&fit=crop',
+            'tissu' => 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop',
+            'bogolan' => 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop',
+            'textile' => 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop',
+            'poterie' => 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop',
+            'céram' => 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop',
+            'ceram' => 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=600&auto=format&fit=crop',
+            'cuir' => 'https://images.unsplash.com/photo-1524289286702-f07229da36f5?q=80&w=600&auto=format&fit=crop',
+        ];
+        
+        foreach ($categoryImages as $key => $imageUrl) {
+            if (str_contains($slug, $key)) {
+                return $imageUrl;
+            }
+        }
+        
+        return null;
     }
 
     /** @return array{slug: string, label: string, class: string, icon: string} */

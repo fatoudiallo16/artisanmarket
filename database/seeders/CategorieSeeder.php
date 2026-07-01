@@ -20,9 +20,7 @@ class CategorieSeeder extends Seeder
         };
 
         foreach ([
-            'bijoux', 'tissus', 'poterie', 'pot en terre cuite',
-            'sculpture bois', 'cuir', 'instruments', 'maroquinerie',
-            'art mural', 'vannerie', 'cosmetiques',
+            'bijoux', 'tissus', 'poterie', 'cuir',
         ] as $name) {
             Categorie::firstOrCreate(
                 [$column => $name],

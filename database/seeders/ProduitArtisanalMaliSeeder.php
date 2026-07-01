@@ -15,8 +15,7 @@ class ProduitArtisanalMaliSeeder extends Seeder
     public function run(): void
     {
         $categoryNames = [
-            'bijoux', 'tissus', 'poterie', 'sculpture bois', 'cuir',
-            'instruments', 'maroquinerie', 'art mural', 'vannerie', 'cosmetiques',
+            'bijoux', 'tissus', 'poterie', 'cuir',
         ];
 
         $categories = collect($categoryNames)->mapWithKeys(
@@ -61,13 +60,6 @@ class ProduitArtisanalMaliSeeder extends Seeder
             ['email' => 'moussa@artisanmarket.test', 'name' => 'Moussa Konaté', 'boutique' => 'Bronze & Terre — Poterie'],
             ['email' => 'fatou@artisanmarket.test', 'name' => 'Fatou Diarra', 'boutique' => 'Tissus Fatou — Bogolan'],
             ['email' => 'sekou@artisanmarket.test', 'name' => 'Sekou Coulibaly', 'boutique' => 'Bogolan Ségou'],
-            ['email' => 'mariam@artisanmarket.test', 'name' => 'Mariam Keita', 'boutique' => 'Maroquinerie Kayes'],
-            ['email' => 'ibrahim@artisanmarket.test', 'name' => 'Ibrahim Touré', 'boutique' => 'Sculptures Mopti'],
-            ['email' => 'kadidia@artisanmarket.test', 'name' => 'Kadidia Sanogo', 'boutique' => 'Indigo Djenné'],
-            ['email' => 'ousmane@artisanmarket.test', 'name' => 'Ousmane Diarra', 'boutique' => 'Vannerie Niger'],
-            ['email' => 'aissata@artisanmarket.test', 'name' => 'Aïssata Dembélé', 'boutique' => 'Bazin Bamako'],
-            ['email' => 'mamadou@artisanmarket.test', 'name' => 'Mamadou Sangaré', 'boutique' => 'Instruments Griot'],
-            ['email' => 'ramata@artisanmarket.test', 'name' => 'Ramata Coulibaly', 'boutique' => 'Art Mural Mali'],
             ['email' => 'modibo@artisanmarket.test', 'name' => 'Modibo Kanté', 'boutique' => 'Cuir & Peaux Tombouctou'],
         ];
 
@@ -176,9 +168,7 @@ class ProduitArtisanalMaliSeeder extends Seeder
             ['Pirogue Miniature', 'Pirogue fleuve Niger sculptée, socle bois.', 28000, 7],
         ];
 
-        foreach ($bois as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'sculpture bois'];
-        }
+        // Catégorie 'sculpture bois' supprimée
 
         $cuir = [
             ['Sandales Cuir Touareg', 'Sandales cuir tannage végétal, semelle robuste pour désert.', 28000, 15],
@@ -195,84 +185,7 @@ class ProduitArtisanalMaliSeeder extends Seeder
             $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'cuir'];
         }
 
-        $instruments = [
-            ['Balafon 8 Lames', 'Balafon 8 lames bois et calebasses, accordage traditionnel pentatonique.', 120000, 2],
-            ['Kora 21 Cordes', 'Kora 21 cordes calebasse et peau de vache, chevalet bois.', 185000, 2],
-            ['Djembé Sculpté', 'Djembé corps bois sculpté, peau chèvre tendue.', 75000, 5],
-            ['N\'goni 4 Cordes', 'N\'goni peul 4 cordes, son clair et mélodique.', 45000, 6],
-            ['Flûte Peul', 'Flûte peule en roseau et bois, gamme diatonique.', 12000, 12],
-            ['Calebasse Percussion', 'Paire calebasses percussion avec maillets tissés.', 18000, 10],
-            ['Sistre Métal', 'Sistre métal forgé, accompagnement griot.', 22000, 8],
-            ['Tam-tam Bois', 'Tam-tam bois creux, appel villageois.', 35000, 4],
-        ];
-
-        foreach ($instruments as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'instruments'];
-        }
-
-        $maro = [
-            ['Sac à Main Bogolan', 'Sac à main bogolan et cuir, doublure coton, fermeture zip.', 32000, 12],
-            ['Porte-documents Artisan', 'Porte-documents A4 cuir et tissu, poignée renforcée.', 42000, 8],
-            ['Trousses Set 3', 'Set 3 trousses tailles différentes, bogolan assorti.', 15000, 20],
-            ['Sac Voyage', 'Sac voyage grand format, bandoulière cuir, renforts couture.', 55000, 6],
-            ['Porte-monnaie Wax', 'Porte-monnaie wax et cuir, plusieurs compartiments.', 9500, 25],
-            ['Sacoche Ordinateur', 'Sacoche 15 pouces bogolan, protection matelassée.', 48000, 7],
-            ['Ceinture Porte-outils', 'Ceinture artisan cuir pour outils potier ou forgeron.', 28000, 5],
-            ['Cartable Enfant', 'Cartable enfant bogolan, bretelles rembourrées.', 25000, 14],
-        ];
-
-        foreach ($maro as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'maroquinerie'];
-        }
-
-        $mur = [
-            ['Tableau Bogolan Encadré', 'Tableau bogolan 60×80 cm encadré bois, prêt à accrocher.', 65000, 5],
-            ['Triptyque Indigo', 'Triptyque indigo Djenné 3×40×60 cm, encadrement noir.', 85000, 3],
-            ['Affiche Faune Mali', 'Série affiches animaux Mali (éléphant, girafe) sérigraphie artisanale.', 18000, 15],
-            ['Miroir Cadre Bois', 'Miroir rond diamètre 50 cm, cadre bois sculpté.', 42000, 6],
-            ['Panneau Proverbes', 'Panneau calligraphie proverbes bambara sur tissu.', 38000, 7],
-            ['Carte Mali Brodée', 'Carte géographique Mali brodée fil, cadre bois.', 55000, 4],
-            ['Toile Pays Dogon', 'Toile peinte paysage falaise Bandiagara.', 72000, 3],
-            ['Horloge Bogolan', 'Horloge murale mécanisme quartz, cadran bogolan.', 28000, 9],
-        ];
-
-        foreach ($mur as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'art mural'];
-        }
-
-        $van = [
-            ['Panier Rond Mopti', 'Panier rond tressé roseau et fibres palmier, diamètre 40 cm.', 12000, 18],
-            ['Corbeille Couvercle', 'Corbeille avec couvercle tressé, conservation fruits.', 15000, 14],
-            ['Tapis Vannerie', 'Tapis vannerie 120×80 cm, motifs zigzag naturels.', 35000, 8],
-            ['Panier Plateau', 'Plateau vannerie plat, service pain ou fruits.', 8500, 22],
-            ['Hotte Marché', 'Hotte portée dos, vannerie renforcée, sangles cuir.', 22000, 10],
-            ['Set Paniers Déco', 'Set 3 paniers tailles déco murale ou rangement.', 28000, 9],
-            ['Cloche Vannerie', 'Cloche décorative vannerie et calebasses.', 18000, 7],
-            ['Panier à Linge', 'Grand panier à linge tressé, poignées renforcées.', 24000, 6],
-        ];
-
-        foreach ($van as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'vannerie'];
-        }
-
-        $cos = [
-            ['Beurre Karité Pur 250g', 'Beurre de karité 100 % pur, récolte coopérative Sikasso, sans additifs.', 8500, 40],
-            ['Savon Noir Bamako', 'Savon noir traditionnel à base d\'huiles locales et cendres plantes.', 3500, 50],
-            ['Huile Balanites 100ml', 'Huile de balanites pressée à froid, soin peau et cheveux.', 6500, 30],
-            ['Baume Lèvres Karité', 'Baume lèvres karité et cire d\'abeille locale.', 2500, 45],
-            ['Savon Bogolan', 'Savon artisanal coloré terre ocre, parfum hibiscus.', 4000, 35],
-            ['Huile Neem 50ml', 'Huile neem traditionnelle, usage cutané.', 5500, 28],
-            ['Gommage Karité Sucre', 'Gommage corps karité et sucre de canne local.', 7500, 22],
-            ['Encens Mali', 'Bâtons encens résines et herbes du Sahel.', 4500, 32],
-            ['Crème Mains Artisane', 'Crème mains karité et beurre de cacao, pot 100 ml.', 6000, 26],
-            ['Savon Indigo', 'Savon teinté indigo, glycérine végétale.', 4200, 30],
-            ['Huile Baobab 100ml', 'Huile de baobab pressée à froid, région de Kayes.', 7200, 24],
-            ['Poudre Henné Mali', 'Poudre henné naturel pour teintures capillaires traditionnelles.', 3800, 28],
-        ];
-
-        foreach ($cos as [$nom, $desc, $prix, $stock]) {
-            $items[] = ['nom' => $nom, 'description' => $desc, 'prix' => $prix, 'stock' => $stock, 'cat' => 'cosmetiques'];
-        }
+        // Catégories supprimées : instruments, maroquinerie, art mural, vannerie, cosmetiques
 
         return $items;
     }
